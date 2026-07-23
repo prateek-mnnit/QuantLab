@@ -1,0 +1,155 @@
+// QuantLab database schema.
+//
+// This mirrors exactly what was approved in the Technical Architecture doc
+// (Section 2). A few structural notes worth remembering when you come back
+// to this file:
+//
+// - `entryConditions` / `exitConditions` on Strategy are JSONB, not
+//   normalized tables. Condition trees are recursive and always read/written
+//   as a whole - normalizing them would mean a painful self-referencing
+//   table for no real query benefit.
+// - `entryExplanation` / `exitExplanation` on Trade store a snapshot of
+//   which conditions fired and their values at that bar. That snapshot is
+//   what powers "explain why this trade happened" without recomputing
+//   anything after the fact.
+// - There is no Indicator table. The indicator catalog (RSI, SMA, EMA, ...)
+//   is small, static, and lives in code (packages/domain, added in a later
+//   phase), not the database.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  strategies    Strategy[]
+  watchlist     WatchlistItem[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model WatchlistItem {
+  id      String   @id @default(uuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol  String
+  addedAt DateTime @default(now())
+
+  @@unique([userId, symbol])
+  @@map("watchlist_items")
+}
+
+model Strategy {
+  id          String @id @default(uuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  version     Int    @default(1)
+  timeframe   String
+
+  entryConditions Json
+  exitConditions  Json
+
+  stopLossConfig       Json?
+  takeProfitConfig     Json?
+  trailingStopConfig   Json?
+  positionSizingConfig Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  backtestRuns BacktestRun[]
+
+  @@index([userId])
+  @@map("strategies")
+}
+
+enum BacktestStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model BacktestRun {
+  id         String   @id @default(uuid())
+  strategyId String
+  strategy   Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  symbol     String
+  timeframe  String
+  dateFrom   DateTime
+  dateTo     DateTime
+
+  status       BacktestStatus @default(PENDING)
+  errorMessage String?
+
+  totalReturnPct Float?
+  cagr           Float?
+  winRate        Float?
+  profitFactor   Float?
+  maxDrawdownPct Float?
+  sharpeRatio    Float?
+  totalTrades    Int?
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  trades Trade[]
+
+  @@index([strategyId])
+  @@index([status])
+  @@map("backtest_runs")
+}
+
+enum TradeExitReason {
+  TAKE_PROFIT
+  STOP_LOSS
+  TRAILING_STOP
+  EXIT_SIGNAL
+  END_OF_BACKTEST
+}
+
+model Trade {
+  id            String      @id @default(uuid())
+  backtestRunId String
+  backtestRun   BacktestRun @relation(fields: [backtestRunId], references: [id], onDelete: Cascade)
+
+  entryTime  DateTime
+  entryPrice Float
+  exitTime   DateTime?
+  exitPrice  Float?
+  size       Float
+  pnl        Float?
+  exitReason TradeExitReason?
+
+  entryExplanation Json
+  exitExplanation  Json?
+
+  @@index([backtestRunId])
+  @@map("trades")
+}

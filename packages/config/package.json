@@ -1,0 +1,7 @@
+{
+  "name": "@quantlab/config",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shared TypeScript compiler configuration for all QuantLab workspaces",
+  "files": ["tsconfig.base.json"]
+}

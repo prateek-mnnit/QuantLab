@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* A handful of base overrides so the app reads as a dark-mode fintech
+   product out of the box, rather than the default Tailwind light theme. */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-surface antialiased;
+  }
+}
