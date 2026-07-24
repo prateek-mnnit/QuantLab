@@ -7,7 +7,7 @@ import type { AuthUser } from '@quantlab/shared-types';
  * Use case pattern: one class, one business operation, named after what it
  * does ("RegisterUser") rather than what table it touches. Dependencies
  * (the repository, the hasher) are constructor-injected as INTERFACES the
- * class depends on - this class has no idea Prisma or argon2 exist
+ * class depends on - this class has no idea Prisma or bcrypt exist
  * underneath. That's what makes it unit-testable with fakes and is the
  * concrete payoff of the layered architecture: this file could be tested
  * with an in-memory fake UserRepository and a fake PasswordHasher, with no
