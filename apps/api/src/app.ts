@@ -1,8 +1,8 @@
-import express, { type Express } from 'express';
+import express, { type Express, type Request } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import pinoHttp from 'pino-http';
+import { pinoHttp } from 'pino-http';
 import { env } from './config/env.js';
 import { logger } from './infrastructure/logging/logger.js';
 import { globalRateLimiter } from './interface/http/middleware/rateLimiter.js';
@@ -34,7 +34,7 @@ export function createApp(): Express {
       logger,
       // Keep access logs quiet for the health check so local dev logs
       // aren't spammed by uptime-monitor-style polling.
-      autoLogging: { ignore: (req) => req.url === '/api/health' },
+      autoLogging: { ignore: (req: Request) => req.url === '/api/health' },
     }),
   );
   app.use(globalRateLimiter);

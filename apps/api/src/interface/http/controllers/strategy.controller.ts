@@ -7,6 +7,21 @@ import type { ListStrategiesUseCase } from '../../../application/strategies/List
 import type { DeleteStrategyUseCase } from '../../../application/strategies/DeleteStrategyUseCase.js';
 
 /**
+ * Express 5 upgraded its internal router to path-to-regexp v8, which added
+ * support for repeated capture groups in route patterns - as a result,
+ * `req.params[key]` is now typed as `string | string[]` for EVERY param,
+ * even though none of the routes below define a repeated `:id` segment.
+ * This narrows it back to a single `string`, preserving exactly the same
+ * "there's always one id" assumption the code already made (previously via
+ * a bare `req.params.id!`) - it does not change behavior for any request
+ * these routes actually receive.
+ */
+function getIdParam(params: Request['params']): string {
+  const value = params.id;
+  return Array.isArray(value) ? value[0]! : value!;
+}
+
+/**
  * Every handler reads `req.user!.id` - the `!` is safe here specifically
  * because these routes are only ever mounted behind the `authenticate`
  * middleware (see strategy.routes.ts), which guarantees `req.user` is set
@@ -35,13 +50,13 @@ export function createStrategyController(dependencies: {
     },
 
     async update(req: Request, res: Response): Promise<void> {
-      const strategy = await updateStrategyUseCase.execute(req.params.id!, req.user!.id, req.body);
+      const strategy = await updateStrategyUseCase.execute(getIdParam(req.params), req.user!.id, req.body);
       const body: ApiSuccessResponse<Strategy> = { success: true, data: strategy };
       res.status(200).json(body);
     },
 
     async getOne(req: Request, res: Response): Promise<void> {
-      const strategy = await getStrategyUseCase.execute(req.params.id!, req.user!.id);
+      const strategy = await getStrategyUseCase.execute(getIdParam(req.params), req.user!.id);
       const body: ApiSuccessResponse<Strategy> = { success: true, data: strategy };
       res.status(200).json(body);
     },
@@ -53,7 +68,7 @@ export function createStrategyController(dependencies: {
     },
 
     async remove(req: Request, res: Response): Promise<void> {
-      await deleteStrategyUseCase.execute(req.params.id!, req.user!.id);
+      await deleteStrategyUseCase.execute(getIdParam(req.params), req.user!.id);
       res.status(204).send();
     },
   };
