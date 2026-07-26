@@ -95,6 +95,13 @@ export async function apiRequest<T>(
     useAuthStore.getState().clearSession();
   }
 
+  // 204 No Content (e.g. a successful DELETE) has no body to parse - `T`
+  // is `void` for these callers, so short-circuit before response.json()
+  // ever runs, since calling it on an empty body throws a parse error.
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   const body = (await response.json()) as ApiResponse<T>;
 
   if (!body.success) {

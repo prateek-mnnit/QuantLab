@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { DashboardPage } from '../pages/DashboardPage';
+import { StrategiesPage } from '../pages/StrategiesPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -28,6 +29,14 @@ export function App() {
           element={
             <AppShell>
               <DashboardPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/strategies"
+          element={
+            <AppShell>
+              <StrategiesPage />
             </AppShell>
           }
         />
