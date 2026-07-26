@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStrategies, useDeleteStrategy } from '../features/strategies/useStrategies';
-import { Button } from '../components/Button';
+import { buttonClassName } from '../components/Button';
 
 const TIMEFRAME_LABELS: Record<string, string> = { '1D': 'Daily', '1W': 'Weekly' };
 
@@ -26,12 +27,12 @@ export function StrategiesPage() {
             Your saved trading strategies.
           </p>
         </div>
-        {/* The visual builder (create/edit) is the next group - this button
-            is intentionally disabled until that route exists, rather than
-            linking somewhere that doesn't work yet. */}
-        <Button disabled title="Strategy builder coming in the next phase">
+        {/* The visual builder now exists (StrategyBuilderPage) - this
+            navigates to /strategies/new via a real <Link>, styled to look
+            identical to the shared Button component. */}
+        <Link to="/strategies/new" className={buttonClassName}>
           New Strategy
-        </Button>
+        </Link>
       </div>
 
       {isLoading && <p className="text-sm text-slate-400">Loading strategies...</p>}
@@ -81,6 +82,12 @@ export function StrategiesPage() {
                     {new Date(strategy.updatedAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <Link
+                      to={`/strategies/${strategy.id}/edit`}
+                      className="mr-4 text-sm font-medium text-brand-400 hover:text-brand-300"
+                    >
+                      Edit
+                    </Link>
                     <button
                       onClick={() => handleDelete(strategy.id, strategy.name)}
                       disabled={pendingDeleteId === strategy.id}

@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { DashboardPage } from '../pages/DashboardPage';
 import { StrategiesPage } from '../pages/StrategiesPage';
+import { StrategyBuilderPage } from '../pages/StrategyBuilderPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -37,6 +38,22 @@ export function App() {
           element={
             <AppShell>
               <StrategiesPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/strategies/new"
+          element={
+            <AppShell>
+              <StrategyBuilderPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/strategies/:id/edit"
+          element={
+            <AppShell>
+              <StrategyBuilderPage />
             </AppShell>
           }
         />

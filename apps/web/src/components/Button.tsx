@@ -1,5 +1,14 @@
 import type { ButtonHTMLAttributes } from 'react';
 
+/**
+ * Exported separately from the `Button` component itself so a react-router
+ * `<Link>` (which must render an `<a>`, not a `<button>`, to navigate) can
+ * look identical to a real button - see the "New Strategy" link in
+ * StrategiesPage - without copy-pasting this class string a second time.
+ */
+export const buttonClassName =
+  'inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60';
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
@@ -14,7 +23,7 @@ export function Button({ isLoading, disabled, children, className = '', ...props
   return (
     <button
       disabled={disabled || isLoading}
-      className={`inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      className={`${buttonClassName} ${className}`}
       {...props}
     >
       {isLoading ? 'Please wait...' : children}
