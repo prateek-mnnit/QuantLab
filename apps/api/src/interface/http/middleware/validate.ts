@@ -24,3 +24,27 @@ export function validateBody<T>(schema: ZodType<T>) {
     next();
   };
 }
+
+/**
+ * Same pattern as `validateBody`, for query-string params (e.g.
+ * `?timeframe=1D&from=...&to=...`). The parsed result is stored on
+ * `res.locals.validatedQuery` instead of overwriting `req.query` - Express 5
+ * types `req.query` as `ParsedQs` (every value `string | string[] | ...`),
+ * and a validated, literal-typed object (e.g. `timeframe: '1D' | '1W'`)
+ * isn't structurally assignable back into that without an unsafe cast that
+ * would buy nothing. `res.locals` has no such constraint, so the controller
+ * reads its already-validated, correctly-typed query from there instead.
+ */
+export function validateQuery<T>(schema: ZodType<T>) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const result = schema.safeParse(req.query);
+
+    if (!result.success) {
+      next(new ValidationError('Query parameters failed validation.', result.error.flatten()));
+      return;
+    }
+
+    res.locals.validatedQuery = result.data;
+    next();
+  };
+}
