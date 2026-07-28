@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { DashboardPage } from '../pages/DashboardPage';
+import { ChartPage } from '../pages/ChartPage';
 import { StrategiesPage } from '../pages/StrategiesPage';
 import { StrategyBuilderPage } from '../pages/StrategyBuilderPage';
 import { LoginPage } from '../pages/LoginPage';
@@ -30,6 +31,14 @@ export function App() {
           element={
             <AppShell>
               <DashboardPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/chart"
+          element={
+            <AppShell>
+              <ChartPage />
             </AppShell>
           }
         />

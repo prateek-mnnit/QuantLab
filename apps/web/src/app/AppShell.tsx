@@ -46,6 +46,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 Dashboard
               </NavLink>
               <NavLink
+                to="/chart"
+                className={({ isActive }) =>
+                  `${NAV_LINK_BASE} ${isActive ? 'text-slate-100' : 'text-slate-400'}`
+                }
+              >
+                Charts
+              </NavLink>
+              <NavLink
                 to="/strategies"
                 className={({ isActive }) =>
                   `${NAV_LINK_BASE} ${isActive ? 'text-slate-100' : 'text-slate-400'}`
