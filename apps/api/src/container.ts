@@ -6,6 +6,8 @@ import { TokenService } from './infrastructure/auth/TokenService.js';
 import { UserRepository } from './infrastructure/persistence/repositories/UserRepository.js';
 import { RefreshTokenRepository } from './infrastructure/persistence/repositories/RefreshTokenRepository.js';
 import { StrategyRepository } from './infrastructure/persistence/repositories/StrategyRepository.js';
+import { BacktestRunRepository } from './infrastructure/persistence/repositories/BacktestRunRepository.js';
+import { TradeRepository } from './infrastructure/persistence/repositories/TradeRepository.js';
 import { YahooFinanceProvider } from './infrastructure/market-data/providers/YahooFinanceProvider.js';
 
 // Application (use cases)
@@ -20,11 +22,16 @@ import { ListStrategiesUseCase } from './application/strategies/ListStrategiesUs
 import { DeleteStrategyUseCase } from './application/strategies/DeleteStrategyUseCase.js';
 import { GetCandlesUseCase } from './application/market-data/GetCandlesUseCase.js';
 import { SearchSymbolsUseCase } from './application/market-data/SearchSymbolsUseCase.js';
+import { RunBacktestUseCase } from './application/backtests/RunBacktestUseCase.js';
+import { GetBacktestUseCase } from './application/backtests/GetBacktestUseCase.js';
+import { GetBacktestTradesUseCase } from './application/backtests/GetBacktestTradesUseCase.js';
+import { ListBacktestsUseCase } from './application/backtests/ListBacktestsUseCase.js';
 
 // Interface (controllers + middleware that need a dependency injected)
 import { createAuthController } from './interface/http/controllers/auth.controller.js';
 import { createStrategyController } from './interface/http/controllers/strategy.controller.js';
 import { createMarketDataController } from './interface/http/controllers/market-data.controller.js';
+import { createBacktestController } from './interface/http/controllers/backtest.controller.js';
 import { createAuthenticateMiddleware } from './interface/http/middleware/authenticate.js';
 
 /**
@@ -49,6 +56,8 @@ const tokenService = new TokenService();
 const userRepository = new UserRepository(prisma);
 const refreshTokenRepository = new RefreshTokenRepository(prisma);
 const strategyRepository = new StrategyRepository(prisma);
+const backtestRunRepository = new BacktestRunRepository(prisma);
+const tradeRepository = new TradeRepository(prisma);
 // Typed as the MarketDataProvider interface it implements, not the
 // concrete class - every use case below depends on that interface, so
 // swapping providers later is a one-line change right here.
@@ -68,6 +77,16 @@ const deleteStrategyUseCase = new DeleteStrategyUseCase(strategyRepository);
 
 const getCandlesUseCase = new GetCandlesUseCase(marketDataProvider);
 const searchSymbolsUseCase = new SearchSymbolsUseCase(marketDataProvider);
+
+const runBacktestUseCase = new RunBacktestUseCase(
+  strategyRepository,
+  backtestRunRepository,
+  tradeRepository,
+  marketDataProvider,
+);
+const getBacktestUseCase = new GetBacktestUseCase(backtestRunRepository);
+const getBacktestTradesUseCase = new GetBacktestTradesUseCase(backtestRunRepository, tradeRepository);
+const listBacktestsUseCase = new ListBacktestsUseCase(backtestRunRepository);
 
 // --- Interface ---
 export const authenticate = createAuthenticateMiddleware(tokenService);
@@ -90,4 +109,11 @@ export const strategyController = createStrategyController({
 export const marketDataController = createMarketDataController({
   getCandlesUseCase,
   searchSymbolsUseCase,
+});
+
+export const backtestController = createBacktestController({
+  runBacktestUseCase,
+  getBacktestUseCase,
+  getBacktestTradesUseCase,
+  listBacktestsUseCase,
 });

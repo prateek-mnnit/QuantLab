@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "postinstall": "npm run build -w packages/shared-types",
+    "postinstall": "npm run build -w packages/shared-types && npm run build -w packages/domain",
     "dev": "concurrently -n api,web -c blue,magenta \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
