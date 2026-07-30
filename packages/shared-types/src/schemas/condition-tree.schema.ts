@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { INDICATOR_TYPES } from '../types/indicator-catalog.js';
+import { INDICATOR_TYPES, type IndicatorType } from '../types/indicator-catalog.js';
 
 /**
  * zod: a TypeScript-first schema validation library. The key idea is that
@@ -21,7 +21,7 @@ import { INDICATOR_TYPES } from '../types/indicator-catalog.js';
 
 const operandSourceIndicator = z.object({
   source: z.literal('INDICATOR'),
-  indicator: z.enum(INDICATOR_TYPES as [string, ...string[]]),
+  indicator: z.enum(INDICATOR_TYPES as [IndicatorType, ...IndicatorType[]]),
   /** e.g. { period: 14 } - validated against the indicator's own bounds by refine() below. */
   params: z.record(z.string(), z.number()),
   /** Required for multi-output indicators (MACD, Bollinger Bands); omitted for single-output ones. */
