@@ -4,6 +4,8 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { ChartPage } from '../pages/ChartPage';
 import { StrategiesPage } from '../pages/StrategiesPage';
 import { StrategyBuilderPage } from '../pages/StrategyBuilderPage';
+import { BacktestNewPage } from '../pages/BacktestNewPage';
+import { BacktestDetailPage } from '../pages/BacktestDetailPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -63,6 +65,22 @@ export function App() {
           element={
             <AppShell>
               <StrategyBuilderPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/backtests/new"
+          element={
+            <AppShell>
+              <BacktestNewPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/backtests/:id"
+          element={
+            <AppShell>
+              <BacktestDetailPage />
             </AppShell>
           }
         />

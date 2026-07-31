@@ -88,6 +88,12 @@ export function StrategiesPage() {
                     >
                       Edit
                     </Link>
+                    <Link
+                      to={`/backtests/new?strategyId=${strategy.id}`}
+                      className="mr-4 text-sm font-medium text-brand-400 hover:text-brand-300"
+                    >
+                      Run Backtest
+                    </Link>
                     <button
                       onClick={() => handleDelete(strategy.id, strategy.name)}
                       disabled={pendingDeleteId === strategy.id}
