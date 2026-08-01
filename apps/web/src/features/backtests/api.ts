@@ -1,4 +1,4 @@
-import type { BacktestRun, RunBacktestInput } from '@quantlab/shared-types';
+import type { BacktestRun, RunBacktestInput, Trade } from '@quantlab/shared-types';
 import { apiRequest } from '../../lib/api-client';
 
 export function runBacktestRequest(input: RunBacktestInput): Promise<BacktestRun> {
@@ -7,4 +7,8 @@ export function runBacktestRequest(input: RunBacktestInput): Promise<BacktestRun
 
 export function fetchBacktest(id: string): Promise<BacktestRun> {
   return apiRequest<BacktestRun>(`/backtests/${id}`);
+}
+
+export function fetchBacktestTrades(id: string): Promise<Trade[]> {
+  return apiRequest<Trade[]>(`/backtests/${id}/trades`);
 }
