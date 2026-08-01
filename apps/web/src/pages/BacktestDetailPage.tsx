@@ -1,6 +1,11 @@
 import { useParams } from 'react-router-dom';
 import { useBacktest, useBacktestTrades } from '../features/backtests/useBacktests';
 import { TradeTable } from '../features/backtests/TradeTable';
+import { EquityCurve } from '../features/backtests/EquityCurve';
+import { DrawdownChart } from '../features/backtests/DrawdownChart';
+import { PerformanceCards } from '../features/backtests/PerformanceCards';
+import { MonthlyPerformanceTable } from '../features/backtests/MonthlyPerformanceTable';
+import { ReturnDistribution } from '../features/backtests/ReturnDistribution';
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pending',
@@ -23,10 +28,11 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Where "Run Backtest" lands: run status/summary metrics (Group P), plus
- * the full trade log with expandable entry/exit explanations (this group).
- * Deliberately still NOT an equity curve or any charting - that's excluded
- * from this group's scope on purpose.
+ * Where "Run Backtest" lands: run status/summary metrics (Group P), an
+ * analytics section - equity curve, drawdown, performance cards, monthly
+ * table, return distribution (this group) - and the full trade log with
+ * expandable entry/exit explanations (Group Q). Strategy comparison is
+ * still excluded, on purpose.
  */
 export function BacktestDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -83,6 +89,38 @@ export function BacktestDetailPage() {
         )}
       </div>
 
+      {run.status === 'COMPLETED' && trades && (
+        <div className="space-y-6">
+          <h2 className="text-sm font-semibold text-slate-200">Analytics</h2>
+
+          <PerformanceCards run={run} trades={trades} />
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Equity Curve
+              </p>
+              <EquityCurve trades={trades} />
+            </div>
+            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Drawdown
+              </p>
+              <DrawdownChart trades={trades} />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Return Distribution
+            </p>
+            <ReturnDistribution trades={trades} />
+          </div>
+
+          <MonthlyPerformanceTable trades={trades} />
+        </div>
+      )}
+
       {run.status === 'COMPLETED' && (
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-slate-200">Trades</h2>
@@ -96,10 +134,6 @@ export function BacktestDetailPage() {
           {trades && <TradeTable trades={trades} />}
         </div>
       )}
-
-      <p className="text-xs text-slate-500">
-        An equity curve and strategy comparison view are coming in a future update.
-      </p>
     </div>
   );
 }
