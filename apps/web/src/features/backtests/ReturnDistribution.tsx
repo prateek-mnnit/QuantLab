@@ -24,7 +24,7 @@ export function ReturnDistribution({ trades }: ReturnDistributionProps) {
   return (
     <div className="flex h-40 items-end gap-1">
       {buckets.map((bucket) => (
-        <div key={bucket.rangeLabel} className="group relative flex flex-1 flex-col items-center justify-end">
+        <div key={bucket.rangeLabel} className="group relative flex h-full flex-1 flex-col items-center justify-end">
           <div
             className={`w-full rounded-t transition-colors ${bucket.isPositive ? 'bg-profit/70' : 'bg-loss/70'}`}
             style={{ height: `${(bucket.count / maxCount) * 100}%`, minHeight: bucket.count > 0 ? '2px' : '0' }}

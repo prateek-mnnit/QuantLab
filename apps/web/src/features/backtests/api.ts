@@ -12,3 +12,8 @@ export function fetchBacktest(id: string): Promise<BacktestRun> {
 export function fetchBacktestTrades(id: string): Promise<Trade[]> {
   return apiRequest<Trade[]>(`/backtests/${id}/trades`);
 }
+
+export function fetchBacktests(strategyId?: string): Promise<BacktestRun[]> {
+  const query = strategyId ? `?strategyId=${encodeURIComponent(strategyId)}` : '';
+  return apiRequest<BacktestRun[]>(`/backtests${query}`);
+}

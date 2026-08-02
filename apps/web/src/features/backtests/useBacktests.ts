@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { RunBacktestInput } from '@quantlab/shared-types';
-import { fetchBacktest, fetchBacktestTrades, runBacktestRequest } from './api';
+import { fetchBacktest, fetchBacktests, fetchBacktestTrades, runBacktestRequest } from './api';
 
 /**
  * No onSuccess side effect here (unlike useCreateStrategy, which
@@ -27,5 +27,12 @@ export function useBacktestTrades(id: string | undefined) {
     queryKey: ['backtests', id, 'trades'],
     queryFn: () => fetchBacktestTrades(id as string),
     enabled: Boolean(id),
+  });
+}
+
+export function useBacktestsList(strategyId?: string) {
+  return useQuery({
+    queryKey: ['backtests', 'list', strategyId ?? 'all'],
+    queryFn: () => fetchBacktests(strategyId),
   });
 }

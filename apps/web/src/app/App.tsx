@@ -4,8 +4,10 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { ChartPage } from '../pages/ChartPage';
 import { StrategiesPage } from '../pages/StrategiesPage';
 import { StrategyBuilderPage } from '../pages/StrategyBuilderPage';
+import { BacktestsPage } from '../pages/BacktestsPage';
 import { BacktestNewPage } from '../pages/BacktestNewPage';
 import { BacktestDetailPage } from '../pages/BacktestDetailPage';
+import { BacktestComparePage } from '../pages/BacktestComparePage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -69,10 +71,26 @@ export function App() {
           }
         />
         <Route
+          path="/backtests"
+          element={
+            <AppShell>
+              <BacktestsPage />
+            </AppShell>
+          }
+        />
+        <Route
           path="/backtests/new"
           element={
             <AppShell>
               <BacktestNewPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/backtests/compare"
+          element={
+            <AppShell>
+              <BacktestComparePage />
             </AppShell>
           }
         />

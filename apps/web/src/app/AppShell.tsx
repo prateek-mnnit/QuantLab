@@ -61,6 +61,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 Strategies
               </NavLink>
+              <NavLink
+                to="/backtests"
+                className={({ isActive }) =>
+                  `${NAV_LINK_BASE} ${isActive ? 'text-slate-100' : 'text-slate-400'}`
+                }
+              >
+                Backtests
+              </NavLink>
             </nav>
           </div>
 
