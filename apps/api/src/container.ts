@@ -94,7 +94,7 @@ const getBacktestUseCase = new GetBacktestUseCase(backtestRunRepository);
 const getBacktestTradesUseCase = new GetBacktestTradesUseCase(backtestRunRepository, tradeRepository);
 const listBacktestsUseCase = new ListBacktestsUseCase(backtestRunRepository);
 
-const addToWatchlistUseCase = new AddToWatchlistUseCase(watchlistRepository);
+const addToWatchlistUseCase = new AddToWatchlistUseCase(watchlistRepository, marketDataProvider);
 const removeFromWatchlistUseCase = new RemoveFromWatchlistUseCase(watchlistRepository);
 const listWatchlistUseCase = new ListWatchlistUseCase(watchlistRepository);
 
