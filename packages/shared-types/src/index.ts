@@ -9,6 +9,8 @@ export * from './types/auth.js';
 export * from './types/indicator-catalog.js';
 export * from './types/strategy.js';
 export * from './types/backtest.js';
+export * from './types/watchlist.js';
 export * from './schemas/condition-tree.schema.js';
 export * from './schemas/strategy.schema.js';
 export * from './schemas/backtest.schema.js';
+export * from './schemas/watchlist.schema.js';

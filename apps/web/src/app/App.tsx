@@ -8,6 +8,7 @@ import { BacktestsPage } from '../pages/BacktestsPage';
 import { BacktestNewPage } from '../pages/BacktestNewPage';
 import { BacktestDetailPage } from '../pages/BacktestDetailPage';
 import { BacktestComparePage } from '../pages/BacktestComparePage';
+import { WatchlistPage } from '../pages/WatchlistPage';
 import { LoginPage } from '../pages/LoginPage';
 import { RegisterPage } from '../pages/RegisterPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -99,6 +100,14 @@ export function App() {
           element={
             <AppShell>
               <BacktestDetailPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/watchlist"
+          element={
+            <AppShell>
+              <WatchlistPage />
             </AppShell>
           }
         />

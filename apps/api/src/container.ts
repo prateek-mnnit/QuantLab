@@ -8,6 +8,7 @@ import { RefreshTokenRepository } from './infrastructure/persistence/repositorie
 import { StrategyRepository } from './infrastructure/persistence/repositories/StrategyRepository.js';
 import { BacktestRunRepository } from './infrastructure/persistence/repositories/BacktestRunRepository.js';
 import { TradeRepository } from './infrastructure/persistence/repositories/TradeRepository.js';
+import { WatchlistRepository } from './infrastructure/persistence/repositories/WatchlistRepository.js';
 import { YahooFinanceProvider } from './infrastructure/market-data/providers/YahooFinanceProvider.js';
 
 // Application (use cases)
@@ -26,12 +27,16 @@ import { RunBacktestUseCase } from './application/backtests/RunBacktestUseCase.j
 import { GetBacktestUseCase } from './application/backtests/GetBacktestUseCase.js';
 import { GetBacktestTradesUseCase } from './application/backtests/GetBacktestTradesUseCase.js';
 import { ListBacktestsUseCase } from './application/backtests/ListBacktestsUseCase.js';
+import { AddToWatchlistUseCase } from './application/watchlist/AddToWatchlistUseCase.js';
+import { RemoveFromWatchlistUseCase } from './application/watchlist/RemoveFromWatchlistUseCase.js';
+import { ListWatchlistUseCase } from './application/watchlist/ListWatchlistUseCase.js';
 
 // Interface (controllers + middleware that need a dependency injected)
 import { createAuthController } from './interface/http/controllers/auth.controller.js';
 import { createStrategyController } from './interface/http/controllers/strategy.controller.js';
 import { createMarketDataController } from './interface/http/controllers/market-data.controller.js';
 import { createBacktestController } from './interface/http/controllers/backtest.controller.js';
+import { createWatchlistController } from './interface/http/controllers/watchlist.controller.js';
 import { createAuthenticateMiddleware } from './interface/http/middleware/authenticate.js';
 
 /**
@@ -58,6 +63,7 @@ const refreshTokenRepository = new RefreshTokenRepository(prisma);
 const strategyRepository = new StrategyRepository(prisma);
 const backtestRunRepository = new BacktestRunRepository(prisma);
 const tradeRepository = new TradeRepository(prisma);
+const watchlistRepository = new WatchlistRepository(prisma);
 // Typed as the MarketDataProvider interface it implements, not the
 // concrete class - every use case below depends on that interface, so
 // swapping providers later is a one-line change right here.
@@ -88,6 +94,10 @@ const getBacktestUseCase = new GetBacktestUseCase(backtestRunRepository);
 const getBacktestTradesUseCase = new GetBacktestTradesUseCase(backtestRunRepository, tradeRepository);
 const listBacktestsUseCase = new ListBacktestsUseCase(backtestRunRepository);
 
+const addToWatchlistUseCase = new AddToWatchlistUseCase(watchlistRepository);
+const removeFromWatchlistUseCase = new RemoveFromWatchlistUseCase(watchlistRepository);
+const listWatchlistUseCase = new ListWatchlistUseCase(watchlistRepository);
+
 // --- Interface ---
 export const authenticate = createAuthenticateMiddleware(tokenService);
 
@@ -116,4 +126,10 @@ export const backtestController = createBacktestController({
   getBacktestUseCase,
   getBacktestTradesUseCase,
   listBacktestsUseCase,
+});
+
+export const watchlistController = createWatchlistController({
+  addToWatchlistUseCase,
+  removeFromWatchlistUseCase,
+  listWatchlistUseCase,
 });
