@@ -1,10 +1,10 @@
 import type { Prisma } from '@prisma/client';
-import type { StrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
+import type { IStrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
 import type { Strategy, StrategyInput } from '@quantlab/shared-types';
 import { toStrategyDto } from './StrategyMapper.js';
 
 export class CreateStrategyUseCase {
-  constructor(private readonly strategyRepository: StrategyRepository) {}
+  constructor(private readonly strategyRepository: IStrategyRepository) {}
 
   async execute(userId: string, input: StrategyInput): Promise<Strategy> {
     const strategy = await this.strategyRepository.create(userId, {

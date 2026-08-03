@@ -1,8 +1,8 @@
-import type { StrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
+import type { IStrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
 import { NotFoundError } from '../errors/AppError.js';
 
 export class DeleteStrategyUseCase {
-  constructor(private readonly strategyRepository: StrategyRepository) {}
+  constructor(private readonly strategyRepository: IStrategyRepository) {}
 
   async execute(id: string, userId: string): Promise<void> {
     const existing = await this.strategyRepository.findByIdForUser(id, userId);

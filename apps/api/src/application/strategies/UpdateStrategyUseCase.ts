@@ -1,11 +1,11 @@
 import type { Prisma } from '@prisma/client';
-import type { StrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
+import type { IStrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
 import type { Strategy, StrategyInput } from '@quantlab/shared-types';
 import { NotFoundError } from '../errors/AppError.js';
 import { toStrategyDto } from './StrategyMapper.js';
 
 export class UpdateStrategyUseCase {
-  constructor(private readonly strategyRepository: StrategyRepository) {}
+  constructor(private readonly strategyRepository: IStrategyRepository) {}
 
   async execute(id: string, userId: string, input: StrategyInput): Promise<Strategy> {
     // Ownership check happens BEFORE the update, via the user-scoped

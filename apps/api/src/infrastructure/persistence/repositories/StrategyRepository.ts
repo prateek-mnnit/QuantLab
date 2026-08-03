@@ -1,6 +1,20 @@
 import type { Prisma, PrismaClient, Strategy } from '@prisma/client';
 
-export class StrategyRepository {
+/**
+ * Same extraction, same reason as IUserRepository/IRefreshTokenRepository
+ * (see Group V): the concrete class's private `prisma` field would
+ * otherwise make it nominally typed, blocking any fake/in-memory test
+ * double from being assignable here even with identical public methods.
+ */
+export interface IStrategyRepository {
+  findManyByUser(userId: string): Promise<Strategy[]>;
+  findByIdForUser(id: string, userId: string): Promise<Strategy | null>;
+  create(userId: string, data: Omit<Prisma.StrategyUncheckedCreateInput, 'userId'>): Promise<Strategy>;
+  update(id: string, data: Prisma.StrategyUpdateInput): Promise<Strategy>;
+  delete(id: string): Promise<Strategy>;
+}
+
+export class StrategyRepository implements IStrategyRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   findManyByUser(userId: string): Promise<Strategy[]> {
