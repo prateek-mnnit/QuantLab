@@ -1,5 +1,5 @@
-import type { RefreshTokenRepository } from '../../infrastructure/persistence/repositories/RefreshTokenRepository.js';
-import type { UserRepository } from '../../infrastructure/persistence/repositories/UserRepository.js';
+import type { IRefreshTokenRepository } from '../../infrastructure/persistence/repositories/RefreshTokenRepository.js';
+import type { IUserRepository } from '../../infrastructure/persistence/repositories/UserRepository.js';
 import type { TokenService } from '../../infrastructure/auth/TokenService.js';
 import { UnauthorizedError } from '../errors/AppError.js';
 
@@ -10,8 +10,8 @@ export interface RefreshResult {
 
 export class RefreshTokenUseCase {
   constructor(
-    private readonly refreshTokenRepository: RefreshTokenRepository,
-    private readonly userRepository: UserRepository,
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
+    private readonly userRepository: IUserRepository,
     private readonly tokenService: TokenService,
   ) {}
 

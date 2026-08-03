@@ -1,6 +1,13 @@
 import type { PrismaClient, RefreshToken } from '@prisma/client';
 
-export class RefreshTokenRepository {
+export interface IRefreshTokenRepository {
+  create(data: { userId: string; tokenHash: string; expiresAt: Date }): Promise<RefreshToken>;
+  findByTokenHash(tokenHash: string): Promise<RefreshToken | null>;
+  revoke(id: string): Promise<RefreshToken>;
+  revokeAllForUser(userId: string): Promise<{ count: number }>;
+}
+
+export class RefreshTokenRepository implements IRefreshTokenRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   create(data: { userId: string; tokenHash: string; expiresAt: Date }): Promise<RefreshToken> {

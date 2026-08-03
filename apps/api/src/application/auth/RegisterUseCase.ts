@@ -1,4 +1,4 @@
-import type { UserRepository } from '../../infrastructure/persistence/repositories/UserRepository.js';
+import type { IUserRepository } from '../../infrastructure/persistence/repositories/UserRepository.js';
 import type { PasswordHasher } from '../../infrastructure/auth/PasswordHasher.js';
 import { ConflictError } from '../errors/AppError.js';
 import type { AuthUser } from '@quantlab/shared-types';
@@ -15,7 +15,7 @@ import type { AuthUser } from '@quantlab/shared-types';
  */
 export class RegisterUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userRepository: IUserRepository,
     private readonly passwordHasher: PasswordHasher,
   ) {}
 

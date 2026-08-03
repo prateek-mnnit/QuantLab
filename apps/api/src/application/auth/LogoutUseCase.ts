@@ -1,9 +1,9 @@
-import type { RefreshTokenRepository } from '../../infrastructure/persistence/repositories/RefreshTokenRepository.js';
+import type { IRefreshTokenRepository } from '../../infrastructure/persistence/repositories/RefreshTokenRepository.js';
 import type { TokenService } from '../../infrastructure/auth/TokenService.js';
 
 export class LogoutUseCase {
   constructor(
-    private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly tokenService: TokenService,
   ) {}
 

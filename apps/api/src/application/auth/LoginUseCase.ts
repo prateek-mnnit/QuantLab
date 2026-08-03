@@ -1,5 +1,5 @@
-import type { UserRepository } from '../../infrastructure/persistence/repositories/UserRepository.js';
-import type { RefreshTokenRepository } from '../../infrastructure/persistence/repositories/RefreshTokenRepository.js';
+import type { IUserRepository } from '../../infrastructure/persistence/repositories/UserRepository.js';
+import type { IRefreshTokenRepository } from '../../infrastructure/persistence/repositories/RefreshTokenRepository.js';
 import type { PasswordHasher } from '../../infrastructure/auth/PasswordHasher.js';
 import type { TokenService } from '../../infrastructure/auth/TokenService.js';
 import { UnauthorizedError } from '../errors/AppError.js';
@@ -14,8 +14,8 @@ export interface LoginResult {
 
 export class LoginUseCase {
   constructor(
-    private readonly userRepository: UserRepository,
-    private readonly refreshTokenRepository: RefreshTokenRepository,
+    private readonly userRepository: IUserRepository,
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
     private readonly passwordHasher: PasswordHasher,
     private readonly tokenService: TokenService,
   ) {}
