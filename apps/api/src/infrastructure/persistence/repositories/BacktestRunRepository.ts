@@ -1,6 +1,13 @@
 import type { BacktestRun, Prisma, PrismaClient } from '@prisma/client';
 
-export class BacktestRunRepository {
+export interface IBacktestRunRepository {
+  create(data: Prisma.BacktestRunUncheckedCreateInput): Promise<BacktestRun>;
+  findByIdForUser(id: string, userId: string): Promise<BacktestRun | null>;
+  findManyForUser(userId: string, strategyId?: string): Promise<BacktestRun[]>;
+  update(id: string, data: Prisma.BacktestRunUpdateInput): Promise<BacktestRun>;
+}
+
+export class BacktestRunRepository implements IBacktestRunRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   create(data: Prisma.BacktestRunUncheckedCreateInput): Promise<BacktestRun> {

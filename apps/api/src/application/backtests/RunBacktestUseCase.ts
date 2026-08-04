@@ -9,9 +9,9 @@ import type {
   TrailingStopConfig,
 } from '@quantlab/shared-types';
 import { runBacktest, type BacktestableStrategy } from '@quantlab/domain';
-import type { StrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
-import type { BacktestRunRepository } from '../../infrastructure/persistence/repositories/BacktestRunRepository.js';
-import type { TradeRepository } from '../../infrastructure/persistence/repositories/TradeRepository.js';
+import type { IStrategyRepository } from '../../infrastructure/persistence/repositories/StrategyRepository.js';
+import type { IBacktestRunRepository } from '../../infrastructure/persistence/repositories/BacktestRunRepository.js';
+import type { ITradeRepository } from '../../infrastructure/persistence/repositories/TradeRepository.js';
 import type { MarketDataProvider } from '../../infrastructure/market-data/MarketDataProvider.js';
 import { NotFoundError } from '../errors/AppError.js';
 import { toBacktestRunDto } from './BacktestMapper.js';
@@ -31,9 +31,9 @@ import { toBacktestRunDto } from './BacktestMapper.js';
  */
 export class RunBacktestUseCase {
   constructor(
-    private readonly strategyRepository: StrategyRepository,
-    private readonly backtestRunRepository: BacktestRunRepository,
-    private readonly tradeRepository: TradeRepository,
+    private readonly strategyRepository: IStrategyRepository,
+    private readonly backtestRunRepository: IBacktestRunRepository,
+    private readonly tradeRepository: ITradeRepository,
     private readonly marketDataProvider: MarketDataProvider,
   ) {}
 

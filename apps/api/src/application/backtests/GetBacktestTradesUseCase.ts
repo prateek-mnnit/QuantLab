@@ -1,13 +1,13 @@
 import type { Trade } from '@quantlab/shared-types';
-import type { BacktestRunRepository } from '../../infrastructure/persistence/repositories/BacktestRunRepository.js';
-import type { TradeRepository } from '../../infrastructure/persistence/repositories/TradeRepository.js';
+import type { IBacktestRunRepository } from '../../infrastructure/persistence/repositories/BacktestRunRepository.js';
+import type { ITradeRepository } from '../../infrastructure/persistence/repositories/TradeRepository.js';
 import { NotFoundError } from '../errors/AppError.js';
 import { toTradeDto } from './BacktestMapper.js';
 
 export class GetBacktestTradesUseCase {
   constructor(
-    private readonly backtestRunRepository: BacktestRunRepository,
-    private readonly tradeRepository: TradeRepository,
+    private readonly backtestRunRepository: IBacktestRunRepository,
+    private readonly tradeRepository: ITradeRepository,
   ) {}
 
   async execute(backtestRunId: string, userId: string): Promise<Trade[]> {

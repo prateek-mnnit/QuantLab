@@ -1,6 +1,11 @@
 import type { Prisma, PrismaClient, Trade } from '@prisma/client';
 
-export class TradeRepository {
+export interface ITradeRepository {
+  createMany(trades: Prisma.TradeCreateManyInput[]): Promise<Prisma.BatchPayload>;
+  findManyForRun(backtestRunId: string): Promise<Trade[]>;
+}
+
+export class TradeRepository implements ITradeRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   createMany(trades: Prisma.TradeCreateManyInput[]): Promise<Prisma.BatchPayload> {
