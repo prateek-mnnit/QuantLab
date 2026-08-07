@@ -8,6 +8,7 @@ export * from './types/health.js';
 export * from './types/auth.js';
 export * from './types/indicator-catalog.js';
 export * from './types/strategy.js';
+export * from './types/strategy-templates.js';
 export * from './types/backtest.js';
 export * from './types/watchlist.js';
 export * from './schemas/condition-tree.schema.js';

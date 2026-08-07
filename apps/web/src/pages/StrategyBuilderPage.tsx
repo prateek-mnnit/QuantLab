@@ -1,10 +1,11 @@
 import { useEffect, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { ConditionGroup } from '@quantlab/shared-types';
+import type { ConditionGroup, StrategyTemplate } from '@quantlab/shared-types';
 import { useStrategyDraftStore } from '../store/strategyDraftStore';
 import { useCreateStrategy, useStrategy, useUpdateStrategy } from '../features/strategies/useStrategies';
 import { ConditionGroupEditor } from '../features/strategy-builder/ConditionGroupEditor';
 import { RiskManagementFields } from '../features/strategy-builder/RiskManagementFields';
+import { StrategyTemplatePicker } from '../features/strategy-builder/StrategyTemplatePicker';
 import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
 import { ApiError } from '../lib/api-client';
@@ -57,6 +58,19 @@ export function StrategyBuilderPage() {
     }
   }
 
+  // Both handlers below only ever call `load`/`reset` - the SAME
+  // draft-store actions edit mode (loadDraft(existingStrategy)) and
+  // "New Strategy" (resetDraft(), in the effect above) already use. A
+  // template is just a different starting point for the exact same draft;
+  // handleSubmit above is completely unaware templates exist.
+  function handleSelectTemplate(template: StrategyTemplate): void {
+    loadDraft(template.input);
+  }
+
+  function handleSelectBlank(): void {
+    resetDraft();
+  }
+
   const mutation = isEditMode ? updateStrategy : createStrategy;
   const errorMessage =
     mutation.error instanceof ApiError
@@ -80,6 +94,13 @@ export function StrategyBuilderPage() {
           position.
         </p>
       </div>
+
+      {/* Templates only make sense when starting a NEW strategy - editing
+          an existing one already has a concrete draft loaded from the
+          server, which a template has no business overwriting. */}
+      {!isEditMode && (
+        <StrategyTemplatePicker onSelectTemplate={handleSelectTemplate} onSelectBlank={handleSelectBlank} />
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
