@@ -1,0 +1,94 @@
+name: CI
+
+# Runs the same checks a developer already has available locally (see
+# README's "Common scripts" table) on every push and PR against main, so a
+# broken build/lint/typecheck/test never lands silently. This is the one
+# piece of the "npm run lint / typecheck / build / test all exist as
+# scripts" story that was still missing: nothing was actually invoking them
+# automatically. Groups V-Y already built real unit-test coverage for auth,
+# strategies, backtests, and watchlists - this workflow is what makes that
+# coverage actually enforced instead of merely runnable.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel a still-running workflow for the same branch/PR when a new commit
+# supersedes it, instead of burning CI minutes on stale runs.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Lint, typecheck, build, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # A real Postgres instance, matching docker-compose.yml's local-dev
+    # setup exactly (same image, same user/db name) - used here to prove
+    # the committed migration actually applies cleanly, the same
+    # `prisma migrate deploy` step a real deployment runs. Unit tests
+    # themselves never touch this database: every use-case test added in
+    # Groups V-Y runs against an in-memory fake repository, by design.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: quantlab
+          POSTGRES_PASSWORD: quantlab_ci_password
+          POSTGRES_DB: quantlab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quantlab -d quantlab"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://quantlab:quantlab_ci_password@localhost:5432/quantlab?schema=public
+      FRONTEND_URL: http://localhost:5173
+      # CI-only placeholder secrets - never used outside this workflow, and
+      # never the same values as apps/api/.env.example's dev placeholders.
+      # Real deployments must supply their own via secret management, per
+      # env.ts's fail-fast validation.
+      JWT_ACCESS_SECRET: ci-only-access-secret-not-for-real-use-min-32-chars
+      JWT_REFRESH_SECRET: ci-only-refresh-secret-not-for-real-use-min-32-chars
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      # `postinstall` (wired in the root package.json) builds
+      # packages/shared-types and packages/domain automatically as part of
+      # this step, since apps/api and apps/web both resolve those packages
+      # via their built `dist/` output.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Apply database migrations
+        run: npm run db:migrate:deploy
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test

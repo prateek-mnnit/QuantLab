@@ -51,3 +51,14 @@ npm run dev
 | `npm run format` | Format the whole repo with Prettier |
 | `npm run db:studio` | Open Prisma Studio to inspect the database |
 | `npm run db:migrate:dev` | Create/apply a new migration in development |
+
+## Continuous integration
+
+Every push and pull request against `main` runs `.github/workflows/ci.yml`,
+which spins up a throwaway Postgres 16 container (matching
+`docker-compose.yml`) and then, in order: installs dependencies, generates
+the Prisma client, applies migrations against it, lints, typechecks, builds,
+and runs the full test suite (`packages/domain` + `apps/api`) - the same
+checks in the table above, just enforced automatically instead of trusted to
+run locally. A red CI run means one of those checks failed; the workflow log
+shows which step and why.

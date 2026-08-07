@@ -44,6 +44,17 @@ export default [
       ],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      // Core ESLint's `no-undef` (pulled in via js.configs.recommended
+      // above) predates TypeScript and only understands runtime JS
+      // identifiers - it has no notion of ambient *type* declarations like
+      // `RequestInit` or `HTMLElement` that come from lib.dom.d.ts, so it
+      // false-positives on any of them used purely as a type annotation.
+      // TypeScript's own compiler (`tsc`, run separately via the
+      // `typecheck` script) already catches a genuinely undefined type
+      // with a far more accurate error, so this rule is pure noise in a
+      // TS codebase - the typescript-eslint project's own docs recommend
+      // turning it off for exactly this reason.
+      'no-undef': 'off',
     },
   },
   {
