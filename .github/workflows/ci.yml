@@ -8,6 +8,12 @@ name: CI
 # automatically. Groups V-Y already built real unit-test coverage for auth,
 # strategies, backtests, and watchlists - this workflow is what makes that
 # coverage actually enforced instead of merely runnable.
+#
+# Group AA added the "Integration tests" step below, reusing the same
+# Postgres service container this job already stands up for
+# `db:migrate:deploy` - the natural place for tests that exercise the real
+# HTTP + auth + database stack, as opposed to the fake-repository unit
+# tests the plain "Test" step runs.
 on:
   push:
     branches: [main]
@@ -92,3 +98,11 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # Runs after the build step (not strictly required by the
+      # integration tests themselves, which run via tsx-free vitest
+      # directly against source) so a build break is reported under the
+      # more familiar "Build" step name rather than surfacing confusingly
+      # inside "Integration tests" first.
+      - name: Integration tests
+        run: npm run test:integration

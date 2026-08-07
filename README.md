@@ -49,8 +49,28 @@ npm run dev
 | `npm run build` | Build all workspaces |
 | `npm run lint` | Lint the whole repo |
 | `npm run format` | Format the whole repo with Prettier |
+| `npm test` | Run unit tests (`packages/domain` + `apps/api`) — fast, no database needed |
+| `npm run test:integration` | Run `apps/api`'s HTTP integration tests — needs a running Postgres (`docker compose up -d`) with migrations applied |
 | `npm run db:studio` | Open Prisma Studio to inspect the database |
 | `npm run db:migrate:dev` | Create/apply a new migration in development |
+
+## Testing
+
+Two distinct test suites live under `apps/api`, kept deliberately separate:
+
+- **Unit tests** (`src/**/*.test.ts`, run via `npm test`) exercise use cases
+  against in-memory fake repositories — no database, no network, no Express
+  app involved. This is the bulk of the suite and what you'd run in a tight
+  edit-test loop.
+- **Integration tests** (`src/test/integration/**/*.integration.test.ts`,
+  run via `npm run test:integration`) boot the real Express app
+  (`createApp()`) and drive it with [supertest](https://github.com/ladjs/supertest)
+  against a real Postgres database, covering the full HTTP → auth →
+  validation → use case → database → error-handling round trip for the
+  health check, the auth lifecycle (register/login/refresh
+  rotation/logout), and strategy CRUD (including cross-user ownership
+  checks). They need `docker compose up -d` and an up-to-date
+  `npm run db:migrate:dev` locally first.
 
 ## Continuous integration
 
@@ -58,7 +78,7 @@ Every push and pull request against `main` runs `.github/workflows/ci.yml`,
 which spins up a throwaway Postgres 16 container (matching
 `docker-compose.yml`) and then, in order: installs dependencies, generates
 the Prisma client, applies migrations against it, lints, typechecks, builds,
-and runs the full test suite (`packages/domain` + `apps/api`) - the same
-checks in the table above, just enforced automatically instead of trusted to
-run locally. A red CI run means one of those checks failed; the workflow log
-shows which step and why.
+runs the unit test suite, and runs the integration test suite described
+above — the same checks in the table above, just enforced automatically
+instead of trusted to run locally. A red CI run means one of those checks
+failed; the workflow log shows which step and why.
