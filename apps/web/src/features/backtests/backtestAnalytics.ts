@@ -1,4 +1,4 @@
-import type { Trade } from '@quantlab/shared-types';
+import type { Trade, TradeExitReason } from '@quantlab/shared-types';
 
 const INITIAL_EQUITY_INDEX = 100;
 
@@ -34,6 +34,18 @@ export interface ReturnHistogramBucket {
   rangeLabel: string;
   count: number;
   isPositive: boolean;
+}
+
+export interface ExitReasonBreakdown {
+  reason: TradeExitReason;
+  label: string;
+  count: number;
+  pct: number; // % of closed trades that exited this way
+}
+
+export interface StreakStats {
+  maxConsecutiveWins: number;
+  maxConsecutiveLosses: number;
 }
 
 /**
@@ -220,4 +232,85 @@ export function computeReturnHistogram(trades: Trade[], bucketCount = 10): Retur
   }
 
   return buckets;
+}
+
+/**
+ * Duplicated from TradeTable.tsx's own `EXIT_REASON_LABEL`, same
+ * deliberate tradeoff already explained above for `computeTradeReturnPct`:
+ * this module doesn't import from a component file, and this group's
+ * constraints don't touch the trade explorer - a 5-line label map isn't
+ * worth crossing that boundary for.
+ */
+const EXIT_REASON_LABEL: Record<string, string> = {
+  TAKE_PROFIT: 'Take Profit',
+  STOP_LOSS: 'Stop Loss',
+  TRAILING_STOP: 'Trailing Stop',
+  EXIT_SIGNAL: 'Exit Signal',
+  END_OF_BACKTEST: 'End of Backtest',
+};
+
+/**
+ * How each closed trade actually ended - data the engine has always
+ * recorded per-trade (`Trade.exitReason`, shown per-row in TradeTable
+ * already) but never summarized. Only reasons that actually occurred are
+ * included (no padded zero-count rows), sorted most-common first, since
+ * that's the more useful reading order for "what's mostly driving my
+ * exits."
+ */
+export function computeExitReasonBreakdown(trades: Trade[]): ExitReasonBreakdown[] {
+  const closed = getClosedTrades(trades).filter((trade) => trade.exitReason !== null);
+  if (closed.length === 0) return [];
+
+  const counts = new Map<string, number>();
+  for (const trade of closed) {
+    const reason = trade.exitReason as TradeExitReason;
+    counts.set(reason, (counts.get(reason) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .map(([reason, count]) => ({
+      reason: reason as TradeExitReason,
+      label: EXIT_REASON_LABEL[reason] ?? reason,
+      count,
+      pct: (count / closed.length) * 100,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/**
+ * The longest run of consecutive wins and the longest run of consecutive
+ * losses, walking closed trades in the same exit-time order every other
+ * analytic here uses. A breakeven trade (`pnl === 0`) is neither a win nor
+ * a loss and breaks both streaks - it's a real outcome, not noise to fold
+ * into one side or the other. This is a risk/psychology metric standard
+ * backtest reports include alongside win rate: win rate alone doesn't say
+ * how bad a losing streak can run, which matters for whether a trader
+ * could actually stick with the strategy through one.
+ */
+export function computeStreaks(trades: Trade[]): StreakStats {
+  const closed = getClosedTrades(trades)
+    .slice()
+    .sort((a, b) => new Date(a.exitTime).getTime() - new Date(b.exitTime).getTime());
+
+  let maxConsecutiveWins = 0;
+  let maxConsecutiveLosses = 0;
+  let currentWinStreak = 0;
+  let currentLossStreak = 0;
+
+  for (const trade of closed) {
+    if (trade.pnl > 0) {
+      currentWinStreak += 1;
+      currentLossStreak = 0;
+    } else if (trade.pnl < 0) {
+      currentLossStreak += 1;
+      currentWinStreak = 0;
+    } else {
+      currentWinStreak = 0;
+      currentLossStreak = 0;
+    }
+    maxConsecutiveWins = Math.max(maxConsecutiveWins, currentWinStreak);
+    maxConsecutiveLosses = Math.max(maxConsecutiveLosses, currentLossStreak);
+  }
+
+  return { maxConsecutiveWins, maxConsecutiveLosses };
 }

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { BacktestRun, Trade } from '@quantlab/shared-types';
-import { computePerformanceExtras } from './backtestAnalytics';
+import { computePerformanceExtras, computeStreaks } from './backtestAnalytics';
 
 interface PerformanceCardsProps {
   run: BacktestRun;
@@ -33,12 +33,14 @@ function Card({ label, value, tone }: { label: string; value: string; tone?: 'pr
  * profitFactor, maxDrawdownPct - all from the domain engine's
  * MetricsCalculator, via the BacktestRun the page already fetched) rather
  * than recalculating them client-side, per the requirement to reuse
- * existing metrics where available. Only the per-trade figures the API
- * doesn't return (avg/largest win/loss, expectancy, avg duration) are
- * computed here, and that computation is memoized to trade identity.
+ * existing metrics where available. The per-trade figures the API doesn't
+ * return (avg/largest win/loss, expectancy, avg duration, and - Group AE -
+ * max consecutive win/loss streaks) are computed here, memoized to trade
+ * identity.
  */
 export function PerformanceCards({ run, trades }: PerformanceCardsProps) {
   const extras = useMemo(() => computePerformanceExtras(trades), [trades]);
+  const streaks = useMemo(() => computeStreaks(trades), [trades]);
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -60,6 +62,8 @@ export function PerformanceCards({ run, trades }: PerformanceCardsProps) {
       <Card label="Largest Win" value={formatCurrency(extras.largestWin)} tone="profit" />
       <Card label="Largest Loss" value={formatCurrency(extras.largestLoss)} tone="loss" />
       <Card label="Avg Trade Duration" value={formatDuration(extras.averageTradeDurationHours)} />
+      <Card label="Max Win Streak" value={streaks.maxConsecutiveWins.toString()} tone="profit" />
+      <Card label="Max Loss Streak" value={streaks.maxConsecutiveLosses.toString()} tone="loss" />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { DrawdownChart } from '../features/backtests/DrawdownChart';
 import { PerformanceCards } from '../features/backtests/PerformanceCards';
 import { MonthlyPerformanceTable } from '../features/backtests/MonthlyPerformanceTable';
 import { ReturnDistribution } from '../features/backtests/ReturnDistribution';
+import { ExitReasonBreakdown } from '../features/backtests/ExitReasonBreakdown';
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pending',
@@ -29,10 +30,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 /**
  * Where "Run Backtest" lands: run status/summary metrics (Group P), an
- * analytics section - equity curve, drawdown, performance cards, monthly
- * table, return distribution (this group) - and the full trade log with
- * expandable entry/exit explanations (Group Q). Strategy comparison is
- * still excluded, on purpose.
+ * analytics section - equity curve, drawdown, performance cards (now
+ * including max win/loss streaks), monthly table, return distribution, and
+ * exit reason breakdown (Group AE adds the streak cards and the exit
+ * reason chart; everything else in Analytics predates it) - and the full
+ * trade log with expandable entry/exit explanations (Group Q). Strategy
+ * comparison is still excluded, on purpose.
  */
 export function BacktestDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -110,11 +113,20 @@ export function BacktestDetailPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Return Distribution
-            </p>
-            <ReturnDistribution trades={trades} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Return Distribution
+              </p>
+              <ReturnDistribution trades={trades} />
+            </div>
+
+            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Exit Reason Breakdown
+              </p>
+              <ExitReasonBreakdown trades={trades} />
+            </div>
           </div>
 
           <MonthlyPerformanceTable trades={trades} />
