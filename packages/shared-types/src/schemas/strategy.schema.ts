@@ -44,7 +44,7 @@ export type TakeProfitConfig = NonNullable<z.infer<typeof takeProfitConfigSchema
 export type TrailingStopConfig = NonNullable<z.infer<typeof trailingStopConfigSchema>>;
 export type PositionSizingConfig = z.infer<typeof positionSizingConfigSchema>;
 
-const timeframeSchema = z.enum(['1D', '1W']);
+const timeframeSchema = z.enum(['5m', '15m', '30m', '1H', '4H', '1D', '1W']);
 
 /**
  * Shared by both create and update - a strategy's shape doesn't change

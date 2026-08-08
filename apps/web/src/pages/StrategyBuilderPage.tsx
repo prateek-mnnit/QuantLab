@@ -1,6 +1,7 @@
 import { useEffect, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { ConditionGroup, StrategyTemplate } from '@quantlab/shared-types';
+import type { ConditionGroup, StrategyTemplate, Timeframe } from '@quantlab/shared-types';
+import { TIMEFRAMES, TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useStrategyDraftStore } from '../store/strategyDraftStore';
 import { useCreateStrategy, useStrategy, useUpdateStrategy } from '../features/strategies/useStrategies';
 import { ConditionGroupEditor } from '../features/strategy-builder/ConditionGroupEditor';
@@ -118,10 +119,13 @@ export function StrategyBuilderPage() {
             id="timeframe"
             className="w-full rounded-lg border border-surface-border bg-surface px-3.5 py-2.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             value={draft.timeframe}
-            onChange={(event) => updateDraft({ timeframe: event.target.value as '1D' | '1W' })}
+            onChange={(event) => updateDraft({ timeframe: event.target.value as Timeframe })}
           >
-            <option value="1D">Daily</option>
-            <option value="1W">Weekly</option>
+            {TIMEFRAMES.map((value) => (
+              <option key={value} value={value}>
+                {TIMEFRAME_LABELS[value]}
+              </option>
+            ))}
           </select>
         </div>
       </div>

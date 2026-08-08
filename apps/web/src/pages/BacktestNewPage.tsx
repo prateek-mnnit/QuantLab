@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Timeframe } from '@quantlab/shared-types';
+import { TIMEFRAMES, TIMEFRAME_LABELS, isIntradayTimeframe } from '@quantlab/shared-types';
 import { useStrategies } from '../features/strategies/useStrategies';
 import { useRunBacktest } from '../features/backtests/useBacktests';
 import { TextField } from '../components/TextField';
@@ -117,9 +118,18 @@ export function BacktestNewPage() {
             onChange={(event) => setTimeframe(event.target.value as Timeframe)}
             className={selectClass}
           >
-            <option value="1D">Daily</option>
-            <option value="1W">Weekly</option>
+            {TIMEFRAMES.map((value) => (
+              <option key={value} value={value}>
+                {TIMEFRAME_LABELS[value]}
+              </option>
+            ))}
           </select>
+          {isIntradayTimeframe(timeframe) && (
+            <p className="text-xs text-slate-500">
+              Intraday history from the data provider is limited to roughly the last
+              {timeframe === '1H' || timeframe === '4H' ? ' 2 years' : ' 60 days'}.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">

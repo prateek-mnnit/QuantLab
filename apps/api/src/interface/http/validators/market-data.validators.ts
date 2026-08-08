@@ -5,7 +5,7 @@ const isoDateString = z.string().refine((value) => !Number.isNaN(Date.parse(valu
 });
 
 export const candlesQuerySchema = z.object({
-  timeframe: z.enum(['1D', '1W']),
+  timeframe: z.enum(['5m', '15m', '30m', '1H', '4H', '1D', '1W']),
   from: isoDateString,
   to: isoDateString,
 });

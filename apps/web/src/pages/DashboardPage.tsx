@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useStrategies } from '../features/strategies/useStrategies';
 import { useBacktestsList } from '../features/backtests/useBacktests';
 import { useWatchlist } from '../features/watchlist/useWatchlist';
 import { useAuthStore } from '../store/authStore';
 import { buttonClassName } from '../components/Button';
 
-const TIMEFRAME_LABELS: Record<string, string> = { '1D': 'Daily', '1W': 'Weekly' };
 const BACKTEST_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pending',
   RUNNING: 'Running',

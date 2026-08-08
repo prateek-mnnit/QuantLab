@@ -1,10 +1,25 @@
 import type { Candle, SymbolResult, Timeframe } from '@quantlab/shared-types';
 import type { MarketDataProvider } from '../MarketDataProvider.js';
 import { SimpleTtlCache } from '../SimpleTtlCache.js';
+import { aggregateCandles, FOUR_HOURS_SECONDS } from '../aggregateCandles.js';
 import { NotFoundError, ServiceUnavailableError } from '../../../application/errors/AppError.js';
 import { logger } from '../../logging/logger.js';
 
-const TIMEFRAME_TO_INTERVAL: Record<Timeframe, string> = { '1D': '1d', '1W': '1wk' };
+/**
+ * Yahoo's own interval string for each timeframe this app supports. There
+ * is deliberately no '4H' entry: Yahoo has no native 4-hour interval (see
+ * `aggregateCandles.ts`), so `getCandles` below fetches '1H's underlying
+ * 60m interval for a '4H' request and rolls it up itself - '4H' is a
+ * derived timeframe, not a distinct Yahoo interval.
+ */
+const TIMEFRAME_TO_INTERVAL: Record<Exclude<Timeframe, '4H'>, string> = {
+  '5m': '5m',
+  '15m': '15m',
+  '30m': '30m',
+  '1H': '60m',
+  '1D': '1d',
+  '1W': '1wk',
+};
 
 interface YahooChartResponse {
   chart: {
@@ -57,7 +72,9 @@ export class YahooFinanceProvider implements MarketDataProvider {
     const cached = this.candleCache.get(cacheKey);
     if (cached) return cached;
 
-    const interval = TIMEFRAME_TO_INTERVAL[timeframe];
+    // '4H' has no native Yahoo interval - fetch the 60m bars '1H' already
+    // uses and aggregate them into 4-hour buckets after the fact.
+    const interval = TIMEFRAME_TO_INTERVAL[timeframe === '4H' ? '1H' : timeframe];
     const period1 = Math.floor(from.getTime() / 1000);
     const period2 = Math.floor(to.getTime() / 1000);
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&period1=${period1}&period2=${period2}`;
@@ -89,8 +106,10 @@ export class YahooFinanceProvider implements MarketDataProvider {
       })
       .filter((candle): candle is Candle => candle !== null);
 
-    this.candleCache.set(cacheKey, candles);
-    return candles;
+    const finalCandles = timeframe === '4H' ? aggregateCandles(candles, FOUR_HOURS_SECONDS) : candles;
+
+    this.candleCache.set(cacheKey, finalCandles);
+    return finalCandles;
   }
 
   async searchSymbols(query: string): Promise<SymbolResult[]> {

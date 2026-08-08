@@ -1,4 +1,5 @@
 import type { ComparisonOperator } from '../schemas/condition-tree.schema.js';
+import type { Timeframe } from './candle.js';
 
 /**
  * Mirrors packages/domain's ConditionExplanation shape exactly, but is
@@ -51,7 +52,7 @@ export interface BacktestRun {
   id: string;
   strategyId: string;
   symbol: string;
-  timeframe: '1D' | '1W';
+  timeframe: Timeframe;
   dateFrom: string;
   dateTo: string;
   status: BacktestStatus;

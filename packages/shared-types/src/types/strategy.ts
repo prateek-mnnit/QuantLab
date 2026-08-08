@@ -5,6 +5,7 @@ import type {
   TrailingStopConfig,
 } from '../schemas/strategy.schema.js';
 import type { ConditionNode } from '../schemas/condition-tree.schema.js';
+import type { Timeframe } from './candle.js';
 
 /**
  * The shape of a strategy as returned BY the API - includes server-assigned
@@ -19,7 +20,7 @@ export interface Strategy {
   name: string;
   description: string | null;
   version: number;
-  timeframe: '1D' | '1W';
+  timeframe: Timeframe;
   entryConditions: ConditionNode;
   exitConditions: ConditionNode;
   stopLossConfig: StopLossConfig | null;
@@ -35,7 +36,7 @@ export interface StrategySummary {
   id: string;
   name: string;
   description: string | null;
-  timeframe: '1D' | '1W';
+  timeframe: Timeframe;
   version: number;
   createdAt: string;
   updatedAt: string;

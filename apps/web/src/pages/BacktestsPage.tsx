@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useBacktestsList } from '../features/backtests/useBacktests';
 import { Button } from '../components/Button';
 
@@ -98,7 +99,7 @@ export function BacktestsPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-slate-400">
-                    {run.timeframe === '1D' ? 'Daily' : 'Weekly'}
+                    {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe}
                   </td>
                   <td className="px-4 py-3 text-slate-400">
                     {new Date(run.dateFrom).toLocaleDateString()} -{' '}

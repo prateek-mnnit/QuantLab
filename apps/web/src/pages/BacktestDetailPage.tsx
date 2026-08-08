@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useBacktest, useBacktestTrades } from '../features/backtests/useBacktests';
 import { TradeTable } from '../features/backtests/TradeTable';
 import { EquityCurve } from '../features/backtests/EquityCurve';
@@ -62,7 +63,7 @@ export function BacktestDetailPage() {
       <div>
         <h1 className="text-2xl font-semibold text-slate-50">{run.symbol} backtest</h1>
         <p className="mt-1 text-sm text-slate-400">
-          {run.timeframe === '1D' ? 'Daily' : 'Weekly'} ·{' '}
+          {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe} ·{' '}
           {new Date(run.dateFrom).toLocaleDateString()} - {new Date(run.dateTo).toLocaleDateString()}
         </p>
       </div>

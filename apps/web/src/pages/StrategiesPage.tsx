@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useStrategies, useDeleteStrategy } from '../features/strategies/useStrategies';
 import { buttonClassName } from '../components/Button';
-
-const TIMEFRAME_LABELS: Record<string, string> = { '1D': 'Daily', '1W': 'Weekly' };
 
 export function StrategiesPage() {
   const { data: strategies, isLoading, isError } = useStrategies();

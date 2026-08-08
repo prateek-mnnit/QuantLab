@@ -1,28 +1,31 @@
 import { useMemo } from 'react';
 import type { Timeframe } from '@quantlab/shared-types';
+import { TIMEFRAME_LABELS, TIMEFRAMES, isIntradayTimeframe } from '@quantlab/shared-types';
 import { useCandles, useSymbolSearch } from '../features/market-data/useMarketData';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useChartViewStore } from '../store/chartViewStore';
 import { CandlestickChart } from '../components/CandlestickChart';
 
-// How far back to load by default for each timeframe - weekly bars are
-// coarser, so a useful weekly chart needs a longer window than a daily one.
-//
-// Note on scope: intraday timeframes (5m/15m/1h) were considered for this
-// group but aren't supported by the current architecture without changes
-// well outside it - `Timeframe` (shared-types/types/candle.ts) is a
-// foundational `'1D' | '1W'` union baked into strategyInputSchema, the
-// strategy model, and YahooFinanceProvider's own
-// `Record<Timeframe, string>` interval map. Widening it would ripple into
-// strategy creation and the backtest engine, both explicitly off-limits
-// for this group - so this group sticks to what the existing two
-// timeframes and existing candle data can support.
-const DAYS_OF_HISTORY: Record<Timeframe, number> = { '1D': 365, '1W': 365 * 3 };
+// How far back to load by default for each timeframe. Daily/weekly bars
+// have effectively unlimited history from the provider, so they default to
+// a generous window; intraday timeframes are capped by Yahoo Finance's own
+// lookback limits (5m/15m/30m: ~60 days; 60m-derived '1H'/'4H': ~730 days)
+// so their defaults stay comfortably inside that range rather than
+// requesting a window the provider will just return empty for.
+const DAYS_OF_HISTORY: Record<Timeframe, number> = {
+  '5m': 30,
+  '15m': 30,
+  '30m': 45,
+  '1H': 180,
+  '4H': 365,
+  '1D': 365,
+  '1W': 365 * 3,
+};
 
-const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = [
-  { value: '1D', label: 'Daily' },
-  { value: '1W', label: 'Weekly' },
-];
+const TIMEFRAME_OPTIONS: { value: Timeframe; label: string }[] = TIMEFRAMES.map((value) => ({
+  value,
+  label: TIMEFRAME_LABELS[value],
+}));
 
 /** How long to wait after the user stops typing before firing a search request. */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -143,13 +146,14 @@ export function ChartPage() {
           )}
         </div>
 
-        {/* A two-way segmented toggle reads faster than a dropdown for a
-            binary choice - no extra click to open a menu, and both options
-            are visible (and their current state obvious) at all times. */}
+        {/* A segmented toggle keeps every timeframe visible (and the
+            current selection obvious) at once, without an extra click to
+            open a dropdown - reads fine even at 7 options since they're
+            short labels and the group can wrap on narrow screens. */}
         <div
           role="group"
           aria-label="Chart timeframe"
-          className="inline-flex rounded-lg border border-surface-border bg-surface p-1"
+          className="inline-flex flex-wrap rounded-lg border border-surface-border bg-surface p-1"
         >
           {TIMEFRAME_OPTIONS.map((option) => (
             <button
@@ -168,6 +172,13 @@ export function ChartPage() {
           ))}
         </div>
       </div>
+
+      {isIntradayTimeframe(timeframe) && (
+        <p className="text-xs text-slate-500">
+          Intraday history from the data provider is limited to roughly the last{' '}
+          {DAYS_OF_HISTORY[timeframe]} days.
+        </p>
+      )}
 
       {selectedSymbol && (
         <div className="flex items-baseline gap-3">
