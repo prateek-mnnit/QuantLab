@@ -43,6 +43,53 @@ describe('runBacktest', () => {
     expect(result.metrics.winRate).toBe(0);
   });
 
+  it('drives entries/exits from an indicator crossover condition, not just PRICE - proving indicators (Group AC) are wired all the way through the engine', () => {
+    // A fast EMA(2) crossing above/below a slow EMA(4), same convention as
+    // the PRICE-crossing test above. Crossover bars found by computing
+    // both EMAs independently (see this group's PR notes): fast crosses
+    // ABOVE slow at bar index 6, and back BELOW at bar index 11.
+    const closes = [100, 98, 96, 94, 92, 95, 100, 105, 110, 108, 104, 98, 92, 88, 85];
+    const candles = closes.map((price, i) => flatCandle(i, price));
+
+    function emaCrossCondition(operator: 'CROSSES_ABOVE' | 'CROSSES_BELOW'): ConditionGroup {
+      return {
+        type: 'AND',
+        id: 'root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'c1',
+            left: { source: 'INDICATOR', indicator: 'EMA', params: { period: 2 } },
+            operator,
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 4 } },
+          },
+        ],
+      };
+    }
+
+    const strategy: BacktestableStrategy = {
+      entryConditions: emaCrossCondition('CROSSES_ABOVE'),
+      exitConditions: emaCrossCondition('CROSSES_BELOW'),
+      stopLossConfig: null,
+      takeProfitConfig: null,
+      trailingStopConfig: null,
+      positionSizingConfig: { type: 'FIXED_SHARES', value: 1 },
+    };
+
+    const result = runBacktest(strategy, candles, { slippagePct: 0, commissionPerTrade: 0 });
+
+    expect(result.trades).toHaveLength(1);
+    const [trade] = result.trades;
+    // Entry signal (fast crosses above slow) detected using bar 6's EMA
+    // values - filled at bar 7's open (105). Exit signal (fast crosses
+    // back below slow) detected using bar 11's EMA values - filled at bar
+    // 12's open (92).
+    expect(trade!.entryPrice).toBe(105);
+    expect(trade!.exitPrice).toBe(92);
+    expect(trade!.exitReason).toBe('EXIT_SIGNAL');
+    expect(trade!.pnl).toBeCloseTo(-13);
+  });
+
   it('never opens a position when the entry condition tree is empty', () => {
     const candles = [95, 105, 110, 95, 90].map((price, i) => flatCandle(i, price));
     const strategy: BacktestableStrategy = {
