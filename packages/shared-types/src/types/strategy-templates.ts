@@ -29,6 +29,19 @@ import type { StrategyInput } from '../schemas/strategy.schema.js';
  * is expected to be a genuine, fully-valid strategy, which the backend unit
  * test in `apps/api/src/application/strategies/StrategyTemplates.test.ts`
  * enforces for every one of them.
+ *
+ * Group AH added the five entries below `breakout` (EMA/RSI/SMA-based
+ * trend and crossover strategies) so this same array could double as the
+ * source of QuantLab's seeded "Built-in Strategies" - the demo seed script
+ * (`apps/api/src/scripts/seedDemoData.ts`) creates one real, persisted
+ * Strategy row per entry here for the demo account, rather than defining a
+ * second, parallel list of "demo strategies" with its own content to keep
+ * in sync. `Donchian Channel Breakout` was in Group AH's original target
+ * list but was dropped: `INDICATOR_CATALOG` has no Donchian Channel
+ * indicator, and adding one would mean extending the indicator catalog and
+ * the domain calculation engine - explicitly out of scope for a
+ * demo-content group. `Triple EMA Trend Strategy` was chosen as a
+ * recognizable, catalog-supported replacement instead.
  */
 export interface StrategyTemplate {
   /** Stable, URL/DOM-safe identifier - e.g. used as the template picker's option value and React key. */
@@ -284,6 +297,236 @@ export const STRATEGY_TEMPLATES: StrategyTemplate[] = [
       stopLossConfig: { type: 'ATR', value: 2 },
       takeProfitConfig: null,
       trailingStopConfig: { type: 'ATR', value: 3 },
+      positionSizingConfig: { type: 'PERCENT_CAPITAL', value: 10 },
+    },
+  },
+  {
+    id: 'ema-trend-following',
+    name: '21 EMA Trend Following',
+    description:
+      'Buy when price closes above the 21-period EMA (an emerging uptrend), and exit once it closes back below it.',
+    input: {
+      name: '21 EMA Trend Following',
+      description:
+        'A simple, widely-used trend-following setup: enter when the close crosses above the 21-period EMA, exit when it crosses back below - stays in the trade only while price is above its trend line.',
+      timeframe: '1D',
+      entryConditions: {
+        type: 'AND',
+        id: 'ema-trend-entry-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'ema-trend-entry-1',
+            left: { source: 'PRICE', field: 'close' },
+            operator: 'CROSSES_ABOVE',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+        ],
+      },
+      exitConditions: {
+        type: 'AND',
+        id: 'ema-trend-exit-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'ema-trend-exit-1',
+            left: { source: 'PRICE', field: 'close' },
+            operator: 'CROSSES_BELOW',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+        ],
+      },
+      stopLossConfig: { type: 'PERCENT', value: 6 },
+      takeProfitConfig: null,
+      trailingStopConfig: null,
+      positionSizingConfig: { type: 'PERCENT_CAPITAL', value: 10 },
+    },
+  },
+  {
+    id: 'ema-9-21-crossover',
+    name: 'EMA 9/21 Crossover',
+    description: 'A faster trend-following setup: buy when the 9-period EMA crosses above the 21-period EMA, and exit on the reverse cross.',
+    input: {
+      name: 'EMA 9/21 Crossover',
+      description:
+        'Enter when the fast 9-period EMA crosses above the slower 21-period EMA (short-term momentum turning up), exit on the reverse cross.',
+      timeframe: '1D',
+      entryConditions: {
+        type: 'AND',
+        id: 'ema-9-21-entry-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'ema-9-21-entry-1',
+            left: { source: 'INDICATOR', indicator: 'EMA', params: { period: 9 } },
+            operator: 'CROSSES_ABOVE',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+        ],
+      },
+      exitConditions: {
+        type: 'AND',
+        id: 'ema-9-21-exit-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'ema-9-21-exit-1',
+            left: { source: 'INDICATOR', indicator: 'EMA', params: { period: 9 } },
+            operator: 'CROSSES_BELOW',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+        ],
+      },
+      stopLossConfig: { type: 'PERCENT', value: 5 },
+      takeProfitConfig: null,
+      trailingStopConfig: null,
+      positionSizingConfig: { type: 'PERCENT_CAPITAL', value: 10 },
+    },
+  },
+  {
+    id: 'sma-50-200-golden-cross',
+    name: 'SMA 50/200 Golden Cross',
+    description:
+      'The classic long-term golden cross: buy when the 50-period SMA crosses above the 200-period SMA, and exit on a death cross (the reverse).',
+    input: {
+      name: 'SMA 50/200 Golden Cross',
+      description:
+        'A long-horizon trend-following setup: enter on a golden cross (50-period SMA crossing above the 200-period SMA), exit on a death cross (the reverse). A wider stop reflects the longer holding period this setup expects.',
+      timeframe: '1D',
+      entryConditions: {
+        type: 'AND',
+        id: 'golden-cross-entry-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'golden-cross-entry-1',
+            left: { source: 'INDICATOR', indicator: 'SMA', params: { period: 50 } },
+            operator: 'CROSSES_ABOVE',
+            right: { source: 'INDICATOR', indicator: 'SMA', params: { period: 200 } },
+          },
+        ],
+      },
+      exitConditions: {
+        type: 'AND',
+        id: 'golden-cross-exit-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'golden-cross-exit-1',
+            left: { source: 'INDICATOR', indicator: 'SMA', params: { period: 50 } },
+            operator: 'CROSSES_BELOW',
+            right: { source: 'INDICATOR', indicator: 'SMA', params: { period: 200 } },
+          },
+        ],
+      },
+      stopLossConfig: { type: 'PERCENT', value: 10 },
+      takeProfitConfig: null,
+      trailingStopConfig: null,
+      positionSizingConfig: { type: 'PERCENT_CAPITAL', value: 10 },
+    },
+  },
+  {
+    id: 'rsi-ema-trend-filter',
+    name: 'RSI + EMA Trend Filter',
+    description:
+      'Combines trend and momentum: buy only when price is above the 21-period EMA AND RSI(14) is above 50, exit if either condition breaks down.',
+    input: {
+      name: 'RSI + EMA Trend Filter',
+      description:
+        'A momentum-confirmed trend setup: enter only when the close is above the 21-period EMA (an uptrend) AND RSI(14) is above 50 (momentum agrees), exit as soon as either the trend breaks (close below the EMA) OR momentum fades (RSI below 45).',
+      timeframe: '1D',
+      entryConditions: {
+        type: 'AND',
+        id: 'rsi-ema-filter-entry-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'rsi-ema-filter-entry-1',
+            left: { source: 'PRICE', field: 'close' },
+            operator: 'GREATER_THAN',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+          {
+            type: 'CONDITION',
+            id: 'rsi-ema-filter-entry-2',
+            left: { source: 'INDICATOR', indicator: 'RSI', params: { period: 14 } },
+            operator: 'GREATER_THAN',
+            right: { source: 'VALUE', value: 50 },
+          },
+        ],
+      },
+      exitConditions: {
+        type: 'OR',
+        id: 'rsi-ema-filter-exit-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'rsi-ema-filter-exit-1',
+            left: { source: 'PRICE', field: 'close' },
+            operator: 'LESS_THAN',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+          {
+            type: 'CONDITION',
+            id: 'rsi-ema-filter-exit-2',
+            left: { source: 'INDICATOR', indicator: 'RSI', params: { period: 14 } },
+            operator: 'LESS_THAN',
+            right: { source: 'VALUE', value: 45 },
+          },
+        ],
+      },
+      stopLossConfig: { type: 'PERCENT', value: 6 },
+      takeProfitConfig: null,
+      trailingStopConfig: null,
+      positionSizingConfig: { type: 'PERCENT_CAPITAL', value: 10 },
+    },
+  },
+  {
+    id: 'triple-ema-trend',
+    name: 'Triple EMA Trend Strategy',
+    description:
+      'A stricter trend-alignment setup: buy only when the 9, 21, and 50-period EMAs are stacked bullishly, and exit as soon as the 9-period EMA crosses back below the 21-period EMA.',
+    input: {
+      name: 'Triple EMA Trend Strategy',
+      description:
+        'Enters only when three EMAs confirm a strong uptrend together (9-period above 21-period, AND 21-period above 50-period), exits as soon as short-term momentum rolls over (9-period EMA crossing below the 21-period EMA).',
+      timeframe: '1D',
+      entryConditions: {
+        type: 'AND',
+        id: 'triple-ema-entry-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'triple-ema-entry-1',
+            left: { source: 'INDICATOR', indicator: 'EMA', params: { period: 9 } },
+            operator: 'GREATER_THAN',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+          {
+            type: 'CONDITION',
+            id: 'triple-ema-entry-2',
+            left: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+            operator: 'GREATER_THAN',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 50 } },
+          },
+        ],
+      },
+      exitConditions: {
+        type: 'AND',
+        id: 'triple-ema-exit-root',
+        children: [
+          {
+            type: 'CONDITION',
+            id: 'triple-ema-exit-1',
+            left: { source: 'INDICATOR', indicator: 'EMA', params: { period: 9 } },
+            operator: 'CROSSES_BELOW',
+            right: { source: 'INDICATOR', indicator: 'EMA', params: { period: 21 } },
+          },
+        ],
+      },
+      stopLossConfig: { type: 'PERCENT', value: 7 },
+      takeProfitConfig: null,
+      trailingStopConfig: null,
       positionSizingConfig: { type: 'PERCENT_CAPITAL', value: 10 },
     },
   },

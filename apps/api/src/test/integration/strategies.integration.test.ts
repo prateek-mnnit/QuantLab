@@ -28,7 +28,13 @@ describe('Strategies', () => {
       .get('/api/strategies')
       .set('Authorization', authHeader)
       .expect(200);
-    expect(listResponse.body.data).toEqual([expect.objectContaining({ id: strategyId })]);
+    // Built-in/product-level strategies (Group AH) may also legitimately
+    // appear in this list - what this test actually needs to confirm is
+    // that the strategy just created is IN there, not that it's the only
+    // entry.
+    expect(listResponse.body.data).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: strategyId })]),
+    );
 
     const getResponse = await request(app)
       .get(`/api/strategies/${strategyId}`)
@@ -108,7 +114,7 @@ describe('Strategies', () => {
     expect(ownerGetResponse.body.data.name).toBe("Owner's Strategy");
   });
 
-  it('scopes the list endpoint to only the requesting user\'s strategies', async () => {
+  it("scopes the list endpoint to only the requesting user's own strategies (plus any built-in ones, visible to everyone)", async () => {
     const userA = await createAuthenticatedTestUser(app, 'list-a');
     const userB = await createAuthenticatedTestUser(app, 'list-b');
     await request(app)
@@ -122,6 +128,13 @@ describe('Strategies', () => {
       .set('Authorization', `Bearer ${userB.accessToken}`)
       .expect(200);
 
-    expect(listResponse.body.data).toEqual([]);
+    // userB may legitimately see built-in/product-level strategies (see
+    // Group AH) - what must NEVER happen is userB seeing userA's PERSONAL
+    // strategy. Asserting the list is empty would be wrong once built-in
+    // content exists; asserting every visible strategy is built-in (i.e.
+    // none of them is "A's Strategy") is the actual isolation guarantee.
+    const names = (listResponse.body.data as Array<{ name: string; isBuiltIn: boolean }>).map((s) => s.name);
+    expect(names).not.toContain("A's Strategy");
+    expect((listResponse.body.data as Array<{ isBuiltIn: boolean }>).every((s) => s.isBuiltIn)).toBe(true);
   });
 });

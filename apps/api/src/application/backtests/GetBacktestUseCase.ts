@@ -7,7 +7,7 @@ export class GetBacktestUseCase {
   constructor(private readonly backtestRunRepository: IBacktestRunRepository) {}
 
   async execute(id: string, userId: string): Promise<BacktestRun> {
-    const run = await this.backtestRunRepository.findByIdForUser(id, userId);
+    const run = await this.backtestRunRepository.findByIdVisibleToUser(id, userId);
     if (!run) {
       throw new NotFoundError('Backtest run not found.');
     }

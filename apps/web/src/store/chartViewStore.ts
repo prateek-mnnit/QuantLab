@@ -1,6 +1,22 @@
 import { create } from 'zustand';
 import type { SymbolResult, Timeframe } from '@quantlab/shared-types';
 
+/**
+ * Group AH, section 5: a first-time visitor's Charts page should never
+ * open blank. RELIANCE.NS is already part of the seeded demo watchlist
+ * (see `apps/api/src/scripts/seedDemoData.ts`), so this keeps the default
+ * consistent with the rest of the demo experience instead of picking an
+ * unrelated symbol. This is ONLY the store's initial value - the instant
+ * the user searches or selects anything else, `selectSymbol`/`setQuery`
+ * below replace it exactly as before, and nothing here ever resets an
+ * existing selection back to this default.
+ */
+const DEFAULT_SYMBOL: SymbolResult = {
+  symbol: 'RELIANCE.NS',
+  name: 'Reliance Industries Ltd.',
+  exchange: 'NSE',
+};
+
 interface ChartViewState {
   query: string;
   selectedSymbol: SymbolResult | null;
@@ -22,8 +38,8 @@ interface ChartViewState {
  * at" problem this store exists to avoid.
  */
 export const useChartViewStore = create<ChartViewState>((set) => ({
-  query: '',
-  selectedSymbol: null,
+  query: `${DEFAULT_SYMBOL.symbol} - ${DEFAULT_SYMBOL.name}`,
+  selectedSymbol: DEFAULT_SYMBOL,
   timeframe: '1D',
 
   setQuery: (query) => set({ query, selectedSymbol: null }),

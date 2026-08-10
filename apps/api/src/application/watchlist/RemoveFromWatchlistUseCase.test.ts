@@ -66,4 +66,13 @@ describe('RemoveFromWatchlistUseCase', () => {
     expect(result.symbol).toBe('AAPL');
     expect(await watchlistRepository.findOneForUser('user-1', 'AAPL')).not.toBeNull();
   });
+
+  it('SECURITY: a featured/built-in symbol can never be removed by a normal user - findOneForUser is strictly own-only, so it never matches a userId-less row', async () => {
+    const { addUseCase, removeUseCase, watchlistRepository } = buildUseCases();
+    await addUseCase.execute(null, 'RELIANCE.NS', { isBuiltIn: true });
+
+    await expect(removeUseCase.execute('user-1', 'RELIANCE.NS')).rejects.toThrow(/not on your watchlist/i);
+
+    expect((await watchlistRepository.findManyBuiltIn()).some((item) => item.symbol === 'RELIANCE.NS')).toBe(true);
+  });
 });

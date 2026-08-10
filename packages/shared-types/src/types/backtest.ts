@@ -72,6 +72,8 @@ export interface BacktestRun {
   maxDrawdownPct: number | null;
   sharpeRatio: number | null;
   totalTrades: number | null;
+  /** Group AH: true for a pre-generated, global example backtest (its strategy is built-in and no specific user requested it), false for a backtest a user ran themselves - including one run against a built-in strategy. */
+  isBuiltIn: boolean;
   createdAt: string;
   completedAt: string | null;
 }

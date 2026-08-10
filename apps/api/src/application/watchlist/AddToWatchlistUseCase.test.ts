@@ -17,7 +17,12 @@ describe('AddToWatchlistUseCase', () => {
 
     const result = await useCase.execute('user-1', 'AAPL');
 
-    expect(result).toEqual({ id: expect.any(String), symbol: 'AAPL', addedAt: expect.any(String) });
+    expect(result).toEqual({
+      id: expect.any(String),
+      symbol: 'AAPL',
+      addedAt: expect.any(String),
+      isBuiltIn: false,
+    });
   });
 
   it('normalizes symbol casing and surrounding whitespace before storing', async () => {

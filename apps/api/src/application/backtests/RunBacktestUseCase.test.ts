@@ -27,9 +27,7 @@ describe('RunBacktestUseCase', () => {
   it('runs to completion and persists metrics for a valid strategy with enough candle data', async () => {
     const strategyRepository = new FakeStrategyRepository();
     const strategy = await seedStrategy(strategyRepository, 'user-1');
-    const backtestRunRepository = new FakeBacktestRunRepository((strategyId) =>
-      strategyId === strategy.id ? 'user-1' : undefined,
-    );
+    const backtestRunRepository = new FakeBacktestRunRepository();
     const tradeRepository = new FakeTradeRepository();
     const candles = Array.from({ length: 20 }, (_, i) => flatCandle(i, 100));
     const marketDataProvider = new FakeMarketDataProvider(candles);
@@ -52,7 +50,7 @@ describe('RunBacktestUseCase', () => {
   it('rejects a strategyId the requesting user does not own, without ever calling the market data provider', async () => {
     const strategyRepository = new FakeStrategyRepository();
     const strategy = await seedStrategy(strategyRepository, 'user-1');
-    const backtestRunRepository = new FakeBacktestRunRepository(() => 'user-1');
+    const backtestRunRepository = new FakeBacktestRunRepository();
     let providerWasCalled = false;
 
     const marketDataProvider = new FakeMarketDataProvider();
@@ -84,9 +82,7 @@ describe('RunBacktestUseCase', () => {
   it('marks the run FAILED (not a thrown error) when there is not enough candle data', async () => {
     const strategyRepository = new FakeStrategyRepository();
     const strategy = await seedStrategy(strategyRepository, 'user-1');
-    const backtestRunRepository = new FakeBacktestRunRepository((strategyId) =>
-      strategyId === strategy.id ? 'user-1' : undefined,
-    );
+    const backtestRunRepository = new FakeBacktestRunRepository();
     // Only one candle - the use case requires at least two.
     const marketDataProvider = new FakeMarketDataProvider([flatCandle(0, 100)]);
 
@@ -112,9 +108,7 @@ describe('RunBacktestUseCase', () => {
   it('marks the run FAILED (not a thrown error) when the market data provider itself throws', async () => {
     const strategyRepository = new FakeStrategyRepository();
     const strategy = await seedStrategy(strategyRepository, 'user-1');
-    const backtestRunRepository = new FakeBacktestRunRepository((strategyId) =>
-      strategyId === strategy.id ? 'user-1' : undefined,
-    );
+    const backtestRunRepository = new FakeBacktestRunRepository();
     const marketDataProvider = new FakeMarketDataProvider([], new Error('No market data found for symbol "ZZZZZ".'));
 
     const useCase = new RunBacktestUseCase(

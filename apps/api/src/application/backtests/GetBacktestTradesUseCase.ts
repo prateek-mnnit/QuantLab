@@ -12,9 +12,10 @@ export class GetBacktestTradesUseCase {
 
   async execute(backtestRunId: string, userId: string): Promise<Trade[]> {
     // A Trade row has no userId of its own - ownership is established by
-    // confirming the PARENT RUN belongs to this user first, same pattern
-    // as everywhere else ownership is checked in this codebase.
-    const run = await this.backtestRunRepository.findByIdForUser(backtestRunId, userId);
+    // confirming the PARENT RUN is visible to this user first (their own
+    // run, or a global example), same pattern as everywhere else
+    // ownership/visibility is checked in this codebase.
+    const run = await this.backtestRunRepository.findByIdVisibleToUser(backtestRunId, userId);
     if (!run) {
       throw new NotFoundError('Backtest run not found.');
     }

@@ -4,10 +4,11 @@ import { FakeBacktestRunRepository, FakeTradeRepository } from './testFakes.js';
 
 describe('GetBacktestTradesUseCase', () => {
   it("returns the run's trades when the requesting user owns it", async () => {
-    const backtestRunRepository = new FakeBacktestRunRepository(() => 'user-1');
+    const backtestRunRepository = new FakeBacktestRunRepository();
     const tradeRepository = new FakeTradeRepository();
     const run = await backtestRunRepository.create({
       strategyId: 'strategy-1',
+      userId: 'user-1',
       symbol: 'AAPL',
       timeframe: '1D',
       dateFrom: new Date('2024-01-01'),
@@ -35,10 +36,11 @@ describe('GetBacktestTradesUseCase', () => {
   });
 
   it('SECURITY: throws NotFoundError (never the trades) for a run owned by a different user', async () => {
-    const backtestRunRepository = new FakeBacktestRunRepository(() => 'user-1');
+    const backtestRunRepository = new FakeBacktestRunRepository();
     const tradeRepository = new FakeTradeRepository();
     const run = await backtestRunRepository.create({
       strategyId: 'strategy-1',
+      userId: 'user-1',
       symbol: 'AAPL',
       timeframe: '1D',
       dateFrom: new Date('2024-01-01'),

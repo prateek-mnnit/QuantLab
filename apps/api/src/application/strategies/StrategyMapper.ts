@@ -24,6 +24,7 @@ export function toStrategyDto(strategy: PrismaStrategy): StrategyDto {
     takeProfitConfig: strategy.takeProfitConfig as StrategyDto['takeProfitConfig'],
     trailingStopConfig: strategy.trailingStopConfig as StrategyDto['trailingStopConfig'],
     positionSizingConfig: strategy.positionSizingConfig as StrategyDto['positionSizingConfig'],
+    isBuiltIn: strategy.isBuiltIn,
     createdAt: strategy.createdAt.toISOString(),
     updatedAt: strategy.updatedAt.toISOString(),
   };
@@ -36,6 +37,7 @@ export function toStrategySummaryDto(strategy: PrismaStrategy): StrategySummary 
     description: strategy.description,
     timeframe: strategy.timeframe as StrategySummary['timeframe'],
     version: strategy.version,
+    isBuiltIn: strategy.isBuiltIn,
     createdAt: strategy.createdAt.toISOString(),
     updatedAt: strategy.updatedAt.toISOString(),
   };

@@ -34,6 +34,7 @@ model User {
 
   strategies    Strategy[]
   watchlist     WatchlistItem[]
+  backtestRuns  BacktestRun[]
   refreshTokens RefreshToken[]
 
   @@map("users")
@@ -53,20 +54,51 @@ model RefreshToken {
 }
 
 model WatchlistItem {
-  id      String   @id @default(uuid())
-  userId  String
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  symbol  String
+  id     String    @id @default(uuid())
+  // Group AH correction: nullable. NULL means this is FEATURED/BUILT-IN
+  // product content (see `isBuiltIn` below), not personal to any one
+  // user - it is created once and read by every authenticated user, the
+  // same way `isBuiltIn` Strategy rows are. A real userId means an
+  // ordinary personal watchlist addition, scoped and isolated exactly as
+  // before.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol String
   addedAt DateTime @default(now())
 
+  // True for a featured/built-in watchlist symbol (userId is NULL),
+  // false for something a user personally added (userId is set). Kept as
+  // its own column - rather than relying on call sites to check
+  // `userId === null` everywhere - so queries and the API DTO can filter
+  // on it directly and read as "is this global" without knowing the
+  // ownership encoding underneath.
+  isBuiltIn Boolean @default(false)
+
+  // NOTE on uniqueness: standard SQL treats every NULL as distinct from
+  // every other NULL, so this constraint does NOT stop two isBuiltIn rows
+  // for the same symbol from ever being inserted - it only guarantees
+  // uniqueness for real (non-null) userId values, which is exactly what
+  // personal watchlists need. Featured/built-in rows instead rely on the
+  // seed script's own idempotency check (find-by-symbol-among-isBuiltIn-
+  // rows before creating) rather than a database constraint - documented
+  // here since it's the one place that isn't self-evident from the schema
+  // alone.
   @@unique([userId, symbol])
   @@map("watchlist_items")
 }
 
 model Strategy {
-  id          String @id @default(uuid())
-  userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String  @id @default(uuid())
+  // Group AH correction: nullable, same reasoning as WatchlistItem.userId
+  // above - NULL means this is a built-in/product-level strategy, visible
+  // to every authenticated user and not owned by any of them. A real
+  // userId means an ordinary personal strategy, scoped and isolated
+  // exactly as before (all of `findByIdForUser`/update/delete stay
+  // strictly scoped to a real, non-null userId, which is what keeps
+  // built-in strategies un-editable and un-deletable by normal users -
+  // see StrategyRepository's doc comments).
+  userId      String?
+  user        User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   description String?
   version     Int    @default(1)
@@ -79,6 +111,9 @@ model Strategy {
   takeProfitConfig     Json?
   trailingStopConfig   Json?
   positionSizingConfig Json
+
+  // True for a built-in/product-level strategy (userId is NULL), false for one a user created themselves. See WatchlistItem.isBuiltIn for the same pattern.
+  isBuiltIn Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -105,6 +140,29 @@ model BacktestRun {
   dateFrom   DateTime
   dateTo     DateTime
 
+  // Group AH correction: BacktestRun did NOT have its own userId before -
+  // ownership was derived entirely through `strategy.userId`. That broke
+  // the moment a Strategy could be ownerless (built-in): a personal
+  // backtest a real user runs AGAINST a built-in strategy still needs to
+  // be recognizably THEIRS, not indistinguishable from a global example -
+  // so "who requested this run" is now tracked directly here rather than
+  // inferred through the strategy it used. NULL means this run is itself
+  // a pre-generated, global EXAMPLE backtest (see seedDemoData.ts) -
+  // exactly the same NULL-means-built-in convention as Strategy/
+  // WatchlistItem above, now applied consistently to the one remaining
+  // ownable table that was missing it.
+  //
+  // Cascade behavior deliberately has TWO independent paths to deletion:
+  // this relation (`onDelete: Cascade` on userId) AND the existing
+  // `strategy` relation above (also Cascade). A user's personal run
+  // disappears if EITHER the user is deleted OR the strategy it used is
+  // deleted - both are correct "this shouldn't exist anymore" triggers.
+  // An example run (userId NULL) is unaffected by any user's deletion,
+  // since it has no user to cascade from - only deleting the built-in
+  // strategy itself would remove it.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   status       BacktestStatus @default(PENDING)
   errorMessage String?
 
@@ -122,6 +180,7 @@ model BacktestRun {
   trades Trade[]
 
   @@index([strategyId])
+  @@index([userId])
   @@index([status])
   @@map("backtest_runs")
 }

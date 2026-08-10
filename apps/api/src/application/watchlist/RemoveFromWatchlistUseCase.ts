@@ -1,8 +1,8 @@
-import type { WatchlistRepository } from '../../infrastructure/persistence/repositories/WatchlistRepository.js';
+import type { IWatchlistRepository } from '../../infrastructure/persistence/repositories/WatchlistRepository.js';
 import { NotFoundError } from '../errors/AppError.js';
 
 export class RemoveFromWatchlistUseCase {
-  constructor(private readonly watchlistRepository: WatchlistRepository) {}
+  constructor(private readonly watchlistRepository: IWatchlistRepository) {}
 
   async execute(userId: string, rawSymbol: string): Promise<void> {
     const symbol = rawSymbol.trim().toUpperCase();

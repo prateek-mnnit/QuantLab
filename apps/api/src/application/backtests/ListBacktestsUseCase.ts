@@ -6,7 +6,7 @@ export class ListBacktestsUseCase {
   constructor(private readonly backtestRunRepository: IBacktestRunRepository) {}
 
   async execute(userId: string, strategyId?: string): Promise<BacktestRun[]> {
-    const runs = await this.backtestRunRepository.findManyForUser(userId, strategyId);
+    const runs = await this.backtestRunRepository.findManyVisibleToUser(userId, strategyId);
     return runs.map(toBacktestRunDto);
   }
 }

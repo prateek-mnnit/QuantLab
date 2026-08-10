@@ -39,7 +39,12 @@ describe('ListWatchlistUseCase', () => {
 
     const [item] = await listUseCase.execute('user-1');
 
-    expect(item).toEqual({ id: expect.any(String), symbol: 'AAPL', addedAt: expect.any(String) });
+    expect(item).toEqual({
+      id: expect.any(String),
+      symbol: 'AAPL',
+      addedAt: expect.any(String),
+      isBuiltIn: false,
+    });
     expect(item).not.toHaveProperty('userId');
   });
 
@@ -52,5 +57,22 @@ describe('ListWatchlistUseCase', () => {
     const result = await listUseCase.execute('user-1');
 
     expect(result.map((item) => item.symbol)).toEqual(['TSLA', 'MSFT', 'AAPL']);
+  });
+
+  it('includes every featured/built-in symbol for any authenticated user, alongside their own', async () => {
+    const { addUseCase, listUseCase } = buildUseCases();
+    await addUseCase.execute('user-1', 'AAPL');
+    await addUseCase.execute(null, 'RELIANCE.NS', { isBuiltIn: true });
+    await addUseCase.execute(null, 'TCS.NS', { isBuiltIn: true });
+
+    const userOne = await listUseCase.execute('user-1');
+    const userTwo = await listUseCase.execute('user-2');
+
+    expect(userOne.map((item) => item.symbol).sort()).toEqual(['AAPL', 'RELIANCE.NS', 'TCS.NS']);
+    // A different, brand-new user sees the SAME featured symbols - they
+    // are product-level content, not owned by either user - but NOT
+    // 'AAPL', which is user-1's personal addition alone.
+    expect(userTwo.map((item) => item.symbol).sort()).toEqual(['RELIANCE.NS', 'TCS.NS']);
+    expect(userOne.filter((item) => item.isBuiltIn)).toHaveLength(2);
   });
 });

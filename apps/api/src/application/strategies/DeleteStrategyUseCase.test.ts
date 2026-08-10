@@ -29,4 +29,17 @@ describe('DeleteStrategyUseCase', () => {
 
     await expect(useCase.execute('nonexistent-id', 'user-1')).rejects.toThrow(/not found/i);
   });
+
+  it('SECURITY: a built-in strategy can never be deleted by a normal user - findByIdForUser is strictly own-only, so it never matches a userId-less row', async () => {
+    const repository = new FakeStrategyRepository();
+    const builtIn = await new CreateStrategyUseCase(repository).execute(
+      null,
+      buildValidStrategyInput({ name: 'Built-in Strategy' }),
+      { isBuiltIn: true },
+    );
+
+    await expect(new DeleteStrategyUseCase(repository).execute(builtIn.id, 'user-1')).rejects.toThrow(/not found/i);
+
+    expect((await repository.findManyBuiltIn()).some((s) => s.id === builtIn.id)).toBe(true);
+  });
 });

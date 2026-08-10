@@ -37,8 +37,20 @@ export class RunBacktestUseCase {
     private readonly marketDataProvider: MarketDataProvider,
   ) {}
 
-  async execute(userId: string, payload: RunBacktestInput): Promise<BacktestRun> {
-    const strategy = await this.strategyRepository.findByIdForUser(payload.strategyId, userId);
+  /**
+   * `userId: null` is used ONLY by the seed script to generate global
+   * example backtests - the resulting BacktestRun's own `userId` column
+   * is set to whatever is passed here, so a null caller produces a run
+   * with no personal owner (an example), while every HTTP-triggered call
+   * (always a real, authenticated `req.user!.id`) produces a run owned by
+   * that user - even when `payload.strategyId` points at a BUILT-IN
+   * strategy. That's the whole reason `findByIdVisibleToUser` (own OR
+   * built-in) is used for the strategy lookup below instead of the strict
+   * `findByIdForUser`: a user must be able to run a personal backtest
+   * against a strategy they don't own, as long as it's built-in.
+   */
+  async execute(userId: string | null, payload: RunBacktestInput): Promise<BacktestRun> {
+    const strategy = await this.strategyRepository.findByIdVisibleToUser(payload.strategyId, userId);
     if (!strategy) {
       throw new NotFoundError('Strategy not found.');
     }
@@ -48,6 +60,7 @@ export class RunBacktestUseCase {
 
     const run = await this.backtestRunRepository.create({
       strategyId: strategy.id,
+      userId,
       symbol: payload.symbol,
       timeframe: payload.timeframe,
       dateFrom,

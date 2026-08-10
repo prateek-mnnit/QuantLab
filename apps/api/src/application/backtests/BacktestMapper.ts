@@ -24,6 +24,7 @@ export function toBacktestRunDto(run: PrismaBacktestRun): BacktestRun {
     maxDrawdownPct: run.maxDrawdownPct,
     sharpeRatio: run.sharpeRatio,
     totalTrades: run.totalTrades,
+    isBuiltIn: run.userId === null,
     createdAt: run.createdAt.toISOString(),
     completedAt: run.completedAt ? run.completedAt.toISOString() : null,
   };

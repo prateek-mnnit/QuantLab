@@ -1,6 +1,7 @@
 import type { WatchlistItem } from '@prisma/client';
 import type { Candle, SymbolResult, Timeframe } from '@quantlab/shared-types';
 import type { MarketDataProvider } from '../../infrastructure/market-data/MarketDataProvider.js';
+import type { IWatchlistRepository } from '../../infrastructure/persistence/repositories/WatchlistRepository.js';
 
 /**
  * An in-memory stand-in for WatchlistRepository - same purpose and pattern
@@ -15,7 +16,7 @@ import type { MarketDataProvider } from '../../infrastructure/market-data/Market
  * one-row-per-(user,symbol) invariant rather than silently allowing
  * duplicates the real database never would.
  */
-export class FakeWatchlistRepository {
+export class FakeWatchlistRepository implements IWatchlistRepository {
   private readonly items: WatchlistItem[] = [];
   private idCounter = 0;
 
@@ -29,12 +30,23 @@ export class FakeWatchlistRepository {
     return this.items.find((item) => item.userId === userId && item.symbol === symbol) ?? null;
   }
 
-  async create(userId: string, symbol: string): Promise<WatchlistItem> {
+  async findManyVisibleToUser(userId: string): Promise<WatchlistItem[]> {
+    return this.items
+      .filter((item) => item.userId === userId || item.isBuiltIn)
+      .sort((a, b) => Number(b.isBuiltIn) - Number(a.isBuiltIn) || b.addedAt.getTime() - a.addedAt.getTime());
+  }
+
+  async findManyBuiltIn(): Promise<WatchlistItem[]> {
+    return this.items.filter((item) => item.isBuiltIn);
+  }
+
+  async create(userId: string | null, symbol: string, isBuiltIn = false): Promise<WatchlistItem> {
     this.idCounter += 1;
     const item: WatchlistItem = {
       id: `watchlist-item-${this.idCounter}`,
       userId,
       symbol,
+      isBuiltIn,
       // Offset by idCounter milliseconds (rather than a bare `new Date()`)
       // so items created within the same test - often microseconds apart -
       // still get strictly increasing timestamps. Without this, two adds

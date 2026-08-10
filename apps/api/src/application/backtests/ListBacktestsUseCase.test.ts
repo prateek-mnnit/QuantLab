@@ -3,10 +3,11 @@ import { ListBacktestsUseCase } from './ListBacktestsUseCase.js';
 import { FakeBacktestRunRepository } from './testFakes.js';
 
 describe('ListBacktestsUseCase', () => {
-  it("returns only the requesting user's runs, never another user's", async () => {
-    const repository = new FakeBacktestRunRepository((strategyId) => (strategyId === 'strategy-user-1' ? 'user-1' : 'user-2'));
+  it("returns the requesting user's own runs plus every global example run, but never another user's runs", async () => {
+    const repository = new FakeBacktestRunRepository();
     await repository.create({
       strategyId: 'strategy-user-1',
+      userId: 'user-1',
       symbol: 'AAPL',
       timeframe: '1D',
       dateFrom: new Date('2024-01-01'),
@@ -15,7 +16,17 @@ describe('ListBacktestsUseCase', () => {
     });
     await repository.create({
       strategyId: 'strategy-user-2',
+      userId: 'user-2',
       symbol: 'MSFT',
+      timeframe: '1D',
+      dateFrom: new Date('2024-01-01'),
+      dateTo: new Date('2024-02-01'),
+      status: 'COMPLETED',
+    });
+    await repository.create({
+      strategyId: 'strategy-builtin',
+      userId: null,
+      symbol: 'RELIANCE.NS',
       timeframe: '1D',
       dateFrom: new Date('2024-01-01'),
       dateTo: new Date('2024-02-01'),
@@ -24,14 +35,16 @@ describe('ListBacktestsUseCase', () => {
 
     const result = await new ListBacktestsUseCase(repository).execute('user-1');
 
-    expect(result).toHaveLength(1);
-    expect(result[0]!.symbol).toBe('AAPL');
+    expect(result.map((run) => run.symbol).sort()).toEqual(['AAPL', 'RELIANCE.NS']);
+    expect(result.find((run) => run.symbol === 'RELIANCE.NS')!.isBuiltIn).toBe(true);
+    expect(result.find((run) => run.symbol === 'AAPL')!.isBuiltIn).toBe(false);
   });
 
   it('filters by strategyId when provided', async () => {
-    const repository = new FakeBacktestRunRepository(() => 'user-1');
+    const repository = new FakeBacktestRunRepository();
     await repository.create({
       strategyId: 'strategy-a',
+      userId: 'user-1',
       symbol: 'AAPL',
       timeframe: '1D',
       dateFrom: new Date('2024-01-01'),
@@ -40,6 +53,7 @@ describe('ListBacktestsUseCase', () => {
     });
     await repository.create({
       strategyId: 'strategy-b',
+      userId: 'user-1',
       symbol: 'MSFT',
       timeframe: '1D',
       dateFrom: new Date('2024-01-01'),

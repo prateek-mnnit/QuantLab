@@ -6,7 +6,7 @@ export class ListStrategiesUseCase {
   constructor(private readonly strategyRepository: IStrategyRepository) {}
 
   async execute(userId: string): Promise<StrategySummary[]> {
-    const strategies = await this.strategyRepository.findManyByUser(userId);
+    const strategies = await this.strategyRepository.findManyVisibleToUser(userId);
     return strategies.map(toStrategySummaryDto);
   }
 }

@@ -16,11 +16,22 @@ import { FakeStrategyRepository } from './testFakes.js';
  * there's no business logic here to unit-test beyond that.
  */
 describe('Built-in strategy templates', () => {
-  it('ships at least the templates requested for Group AB', () => {
+  it('ships at least the templates requested for Group AB and Group AH', () => {
     const ids = STRATEGY_TEMPLATES.map((template) => template.id).sort();
 
     expect(ids).toEqual(
-      ['bollinger-mean-reversion', 'breakout', 'macd-trend-following', 'rsi-reversal', 'sma-crossover'].sort(),
+      [
+        'bollinger-mean-reversion',
+        'breakout',
+        'macd-trend-following',
+        'rsi-reversal',
+        'sma-crossover',
+        'ema-trend-following',
+        'ema-9-21-crossover',
+        'sma-50-200-golden-cross',
+        'rsi-ema-trend-filter',
+        'triple-ema-trend',
+      ].sort(),
     );
   });
 

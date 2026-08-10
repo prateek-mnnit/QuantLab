@@ -16,7 +16,8 @@ import type { Timeframe } from './candle.js';
  */
 export interface Strategy {
   id: string;
-  userId: string;
+  /** Group AH: null for a built-in/product-level strategy, a real user id for one the user created themselves. */
+  userId: string | null;
   name: string;
   description: string | null;
   version: number;
@@ -27,6 +28,8 @@ export interface Strategy {
   takeProfitConfig: TakeProfitConfig | null;
   trailingStopConfig: TrailingStopConfig | null;
   positionSizingConfig: PositionSizingConfig;
+  /** Group AH: true for a seeded/curated example strategy, false for one the user built themselves. */
+  isBuiltIn: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +41,8 @@ export interface StrategySummary {
   description: string | null;
   timeframe: Timeframe;
   version: number;
+  /** Group AH: true for a seeded/curated example strategy, false for one the user built themselves. */
+  isBuiltIn: boolean;
   createdAt: string;
   updatedAt: string;
 }

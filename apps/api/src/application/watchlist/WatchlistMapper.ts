@@ -6,5 +6,6 @@ export function toWatchlistItemDto(item: PrismaWatchlistItem): WatchlistItem {
     id: item.id,
     symbol: item.symbol,
     addedAt: item.addedAt.toISOString(),
+    isBuiltIn: item.isBuiltIn,
   };
 }

@@ -10,20 +10,16 @@ import type { MarketDataProvider } from '../../infrastructure/market-data/Market
  * here: it already exists in ../strategies/testFakes.ts and is imported
  * from there by the test files below, avoiding a duplicate abstraction for
  * something that would be exactly the same fake either way.
+ *
+ * Group AH correction: BacktestRun now has its own `userId` column
+ * (mirrors the real repository - see BacktestRunRepository.ts's own doc
+ * comment), so this fake stores ownership directly on each run instead of
+ * needing an external "who owns this strategyId" callback the way it used
+ * to. `null` means a global example run.
  */
 export class FakeBacktestRunRepository implements IBacktestRunRepository {
   private readonly runs: BacktestRun[] = [];
   private idCounter = 0;
-
-  /**
-   * The real repository resolves "who owns this run" via a Prisma nested
-   * `where: { strategy: { userId } }` join at read time - it never stores
-   * ownership on the run itself. This fake mirrors that exactly: instead
-   * of duplicating ownership as separate state, it's given a function that
-   * answers "what userId owns this strategyId," typically backed by
-   * whatever FakeStrategyRepository the same test is already using.
-   */
-  constructor(private readonly getStrategyOwnerUserId: (strategyId: string) => string | undefined) {}
 
   async create(data: Prisma.BacktestRunUncheckedCreateInput): Promise<BacktestRun> {
     this.idCounter += 1;
@@ -31,6 +27,7 @@ export class FakeBacktestRunRepository implements IBacktestRunRepository {
     const run: BacktestRun = {
       id: `run-${this.idCounter}`,
       strategyId: data.strategyId as string,
+      userId: (data.userId as string | null | undefined) ?? null,
       symbol: data.symbol as string,
       timeframe: data.timeframe as string,
       dateFrom: data.dateFrom as Date,
@@ -51,16 +48,18 @@ export class FakeBacktestRunRepository implements IBacktestRunRepository {
     return run;
   }
 
-  async findByIdForUser(id: string, userId: string): Promise<BacktestRun | null> {
-    const run = this.runs.find((candidate) => candidate.id === id);
-    if (!run) return null;
-    return this.getStrategyOwnerUserId(run.strategyId) === userId ? run : null;
+  async findByIdVisibleToUser(id: string, userId: string): Promise<BacktestRun | null> {
+    return this.runs.find((run) => run.id === id && (run.userId === userId || run.userId === null)) ?? null;
   }
 
-  async findManyForUser(userId: string, strategyId?: string): Promise<BacktestRun[]> {
-    return this.runs.filter(
-      (run) => this.getStrategyOwnerUserId(run.strategyId) === userId && (!strategyId || run.strategyId === strategyId),
-    );
+  async findManyVisibleToUser(userId: string, strategyId?: string): Promise<BacktestRun[]> {
+    return this.runs
+      .filter((run) => (run.userId === userId || run.userId === null) && (!strategyId || run.strategyId === strategyId))
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async findManyBuiltIn(strategyId?: string): Promise<BacktestRun[]> {
+    return this.runs.filter((run) => run.userId === null && (!strategyId || run.strategyId === strategyId));
   }
 
   async update(id: string, data: Prisma.BacktestRunUpdateInput): Promise<BacktestRun> {

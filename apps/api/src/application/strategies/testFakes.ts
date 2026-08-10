@@ -9,7 +9,7 @@ import type { IStrategyRepository } from '../../infrastructure/persistence/repos
  * per-user ownership scoping) with zero database involved.
  */
 export class FakeStrategyRepository implements IStrategyRepository {
-  private readonly strategies: Strategy[] = [];
+  protected readonly strategies: Strategy[] = [];
   private idCounter = 0;
 
   async findManyByUser(userId: string): Promise<Strategy[]> {
@@ -22,7 +22,25 @@ export class FakeStrategyRepository implements IStrategyRepository {
     return this.strategies.find((strategy) => strategy.id === id && strategy.userId === userId) ?? null;
   }
 
-  async create(userId: string, data: Omit<Prisma.StrategyUncheckedCreateInput, 'userId'>): Promise<Strategy> {
+  async findManyVisibleToUser(userId: string): Promise<Strategy[]> {
+    return this.strategies
+      .filter((strategy) => strategy.userId === userId || strategy.isBuiltIn)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  }
+
+  async findByIdVisibleToUser(id: string, userId: string | null): Promise<Strategy | null> {
+    return (
+      this.strategies.find(
+        (strategy) => strategy.id === id && (strategy.userId === userId || strategy.isBuiltIn),
+      ) ?? null
+    );
+  }
+
+  async findManyBuiltIn(): Promise<Strategy[]> {
+    return this.strategies.filter((strategy) => strategy.isBuiltIn);
+  }
+
+  async create(userId: string | null, data: Omit<Prisma.StrategyUncheckedCreateInput, 'userId'>): Promise<Strategy> {
     this.idCounter += 1;
     const now = new Date();
     const strategy: Strategy = {
@@ -38,6 +56,7 @@ export class FakeStrategyRepository implements IStrategyRepository {
       takeProfitConfig: (data.takeProfitConfig as Prisma.JsonValue | undefined) ?? null,
       trailingStopConfig: (data.trailingStopConfig as Prisma.JsonValue | undefined) ?? null,
       positionSizingConfig: data.positionSizingConfig as Prisma.JsonValue,
+      isBuiltIn: (data.isBuiltIn as boolean | undefined) ?? false,
       createdAt: now,
       updatedAt: now,
     };
