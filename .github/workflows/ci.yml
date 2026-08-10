@@ -14,6 +14,14 @@ name: CI
 # `db:migrate:deploy` - the natural place for tests that exercise the real
 # HTTP + auth + database stack, as opposed to the fake-repository unit
 # tests the plain "Test" step runs.
+#
+# Group AI added apps/web's own vitest suite (previously the only workspace
+# with zero test coverage, even though this job's "Lint"/"Typecheck"/"Build"
+# steps already covered it). No change was needed here: the "Test" step
+# below already runs the root `npm test`, and Group AI's addition to that
+# root script (`-w apps/web` alongside the existing domain/api runs) means
+# this workflow enforces it automatically, the same way it already does for
+# the other two workspaces.
 on:
   push:
     branches: [main]
