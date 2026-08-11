@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useStrategies } from '../features/strategies/useStrategies';
 import { useBacktestsList } from '../features/backtests/useBacktests';
 import { useWatchlist } from '../features/watchlist/useWatchlist';
 import { useAuthStore } from '../store/authStore';
-import { buttonClassName } from '../components/Button';
+import { useChartViewStore } from '../store/chartViewStore';
+import { MarketOverview } from '../features/dashboard/MarketOverview';
+import { buildRecentActivity, formatRelativeTime } from '../features/dashboard/recentActivity';
 
 const BACKTEST_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Pending',
@@ -18,30 +20,67 @@ const BACKTEST_STATUS_LABEL: Record<string, string> = {
 const RECENT_ITEM_LIMIT = 5;
 
 /**
- * One of the three summary numbers at the top of the page. Same
- * `rounded-xl border border-surface-border bg-surface-raised p-6` box the
- * Phase-1 placeholder already used for its "Project status" card - no new
- * visual language introduced, just reused for a number instead of a
- * paragraph.
+ * Group AJ: the three summary numbers at the top of the page are now
+ * navigable - same `rounded-xl border border-surface-border
+ * bg-surface-raised p-6` box as before, rendered as a `<Link>` instead of
+ * a `<div>` so it's a real, keyboard-accessible navigation target, with a
+ * subtle border/background shift on hover as the only added affordance
+ * (no scale, shadow, or color-flip - "subtle", not flashy, per spec).
  */
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value, to }: { label: string; value: number; to: string }) {
   return (
-    <div className="rounded-xl border border-surface-border bg-surface-raised p-6">
+    <Link
+      to={to}
+      className="block rounded-xl border border-surface-border bg-surface-raised p-6 transition-colors hover:border-brand-500/40 hover:bg-surface"
+    >
       <p className="text-sm font-medium text-slate-400">{label}</p>
       <p className="mt-2 text-3xl font-semibold text-slate-50">{value}</p>
-    </div>
+    </Link>
   );
 }
 
 /**
- * Shared shell for the three "recent X" sections: a heading with a "View
+ * Four compact entry points into flows that already exist elsewhere in the
+ * app - every one of these is a plain `<Link>` to an existing route
+ * (`/strategies/new`, `/backtests/new`, `/chart`, `/watchlist`), not a new
+ * page, modal, or endpoint. Styled as small bordered chips rather than
+ * full `Button`-style CTAs, matching "compact" over "flashy".
+ */
+function QuickActions() {
+  const actions: { label: string; to: string }[] = [
+    { label: '+ New Strategy', to: '/strategies/new' },
+    { label: 'Run Backtest', to: '/backtests/new' },
+    { label: 'View Charts', to: '/chart' },
+    { label: 'Add to Watchlist', to: '/watchlist' },
+  ];
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-sm font-semibold text-slate-200">Quick Actions</h2>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {actions.map((action) => (
+          <Link
+            key={action.to}
+            to={action.to}
+            className="rounded-lg border border-surface-border bg-surface-raised px-4 py-3 text-center text-sm font-medium text-slate-200 transition-colors hover:border-brand-500/40 hover:bg-surface"
+          >
+            {action.label}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Shared shell for the "recent X" list sections: a heading with a "View
  * all" link, then loading/error/empty states matching
  * StrategiesPage/BacktestsPage/WatchlistPage's existing copy and classes
  * exactly, or the real content once loaded. Keeping this local to the
  * dashboard (rather than promoting it to `components/`) since nothing else
  * in the app currently needs a "titled list preview with a view-all link"
  * shape - reusing it here just avoids repeating the same six lines of
- * loading/error/empty JSX three times over.
+ * loading/error/empty JSX for every section.
  */
 function RecentSection({
   title,
@@ -86,27 +125,52 @@ function RecentSection({
 }
 
 /**
- * The real Dashboard, replacing the Phase-1 placeholder above (which just
- * proved the frontend could reach the API). Every number and list here
- * comes from the same three hooks StrategiesPage, BacktestsPage, and
- * WatchlistPage already call - `useStrategies`, `useBacktestsList`, and
- * `useWatchlist` - so mounting this page issues no new endpoint calls
- * beyond what those pages already make, and React Query serves/shares one
- * cached result per query key rather than this page duplicating a fetch.
+ * The real Dashboard. Every number and list here comes from the same three
+ * hooks StrategiesPage, BacktestsPage, and WatchlistPage already call -
+ * `useStrategies`, `useBacktestsList`, and `useWatchlist` - so mounting
+ * this page issues no new endpoint calls beyond what those pages already
+ * make (React Query serves/shares one cached result per query key), plus
+ * the same `useCandles` hook ChartPage uses for the Market Overview strip.
+ *
+ * Group AJ's page order - Stats, Quick Actions, Market Overview, Recent
+ * Backtests, Recent Activity, Watchlist - replaces the previous "Recent
+ * Strategies" section with "Recent Activity": a cross-cutting feed
+ * (strategy/backtest/watchlist events together) is more useful on a
+ * landing page than a single-category list, and "Created strategy" events
+ * are already one of Recent Activity's three event types, so nothing is
+ * lost.
  */
 export function DashboardPage() {
   const user = useAuthStore((state) => state.user);
+  const navigate = useNavigate();
+  const selectChartSymbol = useChartViewStore((state) => state.selectSymbol);
 
   const { data: strategies, isLoading: strategiesLoading, isError: strategiesError } = useStrategies();
-  // No strategyId filter -> every backtest for the current user, the exact
-  // same query BacktestsPage runs - same query key, so navigating between
-  // the two pages reuses one cached result instead of refetching.
+  // No strategyId filter -> every backtest visible to the current user,
+  // the exact same query BacktestsPage runs - same query key, so
+  // navigating between the two pages reuses one cached result instead of
+  // refetching.
   const { data: backtests, isLoading: backtestsLoading, isError: backtestsError } = useBacktestsList();
   const { data: watchlist, isLoading: watchlistLoading, isError: watchlistError } = useWatchlist();
 
-  const recentStrategies = strategies?.slice(0, RECENT_ITEM_LIMIT) ?? [];
+  const strategyNameById = new Map((strategies ?? []).map((strategy) => [strategy.id, strategy.name]));
   const recentBacktests = backtests?.slice(0, RECENT_ITEM_LIMIT) ?? [];
   const watchlistPreview = watchlist?.slice(0, RECENT_ITEM_LIMIT) ?? [];
+
+  const recentActivity =
+    strategies && backtests && watchlist ? buildRecentActivity(strategies, backtests, watchlist, RECENT_ITEM_LIMIT) : [];
+  const activityLoading = strategiesLoading || backtestsLoading || watchlistLoading;
+  const activityError = strategiesError || backtestsError || watchlistError;
+
+  function goToChart(symbol: string): void {
+    // Reuses ChartPage's own store/action - not a second navigation
+    // mechanism. `name`/`exchange` are left as the bare symbol/empty
+    // string since WatchlistItem carries no company name - ChartPage only
+    // ever displays `selectedSymbol.symbol` prominently, so this doesn't
+    // read as broken, just less descriptive than a real search result.
+    selectChartSymbol({ symbol, name: symbol, exchange: '' });
+    navigate('/chart');
+  }
 
   return (
     <div className="space-y-8">
@@ -120,40 +184,16 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Strategies" value={strategies?.length ?? 0} />
-        <StatCard label="Total Backtests" value={backtests?.length ?? 0} />
-        <StatCard label="Watchlist" value={watchlist?.length ?? 0} />
+        <StatCard label="Total Strategies" value={strategies?.length ?? 0} to="/strategies" />
+        <StatCard label="Total Backtests" value={backtests?.length ?? 0} to="/backtests" />
+        <StatCard label="Watchlist" value={watchlist?.length ?? 0} to="/watchlist" />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <RecentSection
-          title="Recent Strategies"
-          viewAllHref="/strategies"
-          isLoading={strategiesLoading}
-          isError={strategiesError}
-          isEmpty={Boolean(strategies) && strategies!.length === 0}
-          emptyMessage="You haven't created any strategies yet."
-        >
-          {recentStrategies.map((strategy) => (
-            <li key={strategy.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <Link
-                  to={`/strategies/${strategy.id}/edit`}
-                  className="font-medium text-slate-100 hover:text-brand-300"
-                >
-                  {strategy.name}
-                </Link>
-                <p className="text-xs text-slate-500">
-                  {TIMEFRAME_LABELS[strategy.timeframe] ?? strategy.timeframe} · v{strategy.version}
-                </p>
-              </div>
-              <span className="text-xs text-slate-500">
-                {new Date(strategy.updatedAt).toLocaleDateString()}
-              </span>
-            </li>
-          ))}
-        </RecentSection>
+      <QuickActions />
 
+      <MarketOverview />
+
+      <div className="grid gap-8 lg:grid-cols-2">
         <RecentSection
           title="Recent Backtests"
           viewAllHref="/backtests"
@@ -163,27 +203,54 @@ export function DashboardPage() {
           emptyMessage="You haven't run any backtests yet."
         >
           {recentBacktests.map((run) => (
-            <li key={run.id} className="flex items-center justify-between px-4 py-3">
-              <div>
+            <li key={run.id} className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="min-w-0">
                 <Link to={`/backtests/${run.id}`} className="font-medium text-slate-100 hover:text-brand-300">
                   {run.symbol}
                 </Link>
-                <p className="text-xs text-slate-500">
-                  {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe} ·{' '}
-                  {BACKTEST_STATUS_LABEL[run.status] ?? run.status}
+                <p className="truncate text-xs text-slate-500">
+                  {strategyNameById.get(run.strategyId) ?? 'Strategy'} · {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe}
+                  {run.status !== 'COMPLETED' && ` · ${BACKTEST_STATUS_LABEL[run.status] ?? run.status}`}
                 </p>
               </div>
-              <span
-                className={`text-sm font-medium ${
-                  run.totalReturnPct === null
-                    ? 'text-slate-500'
-                    : run.totalReturnPct >= 0
-                      ? 'text-profit'
-                      : 'text-loss'
-                }`}
-              >
-                {run.totalReturnPct !== null ? `${run.totalReturnPct.toFixed(2)}%` : '—'}
-              </span>
+              <div className="flex shrink-0 items-center gap-4">
+                <span
+                  className={`text-sm font-medium ${
+                    run.totalReturnPct === null
+                      ? 'text-slate-500'
+                      : run.totalReturnPct >= 0
+                        ? 'text-profit'
+                        : 'text-loss'
+                  }`}
+                >
+                  {run.totalReturnPct !== null ? `${run.totalReturnPct.toFixed(2)}%` : '—'}
+                </span>
+                <Link
+                  to={`/backtests/${run.id}`}
+                  className="whitespace-nowrap text-sm font-medium text-brand-400 hover:text-brand-300"
+                >
+                  View Analysis →
+                </Link>
+              </div>
+            </li>
+          ))}
+        </RecentSection>
+
+        <RecentSection
+          title="Recent Activity"
+          viewAllHref="/backtests"
+          isLoading={activityLoading}
+          isError={Boolean(activityError)}
+          isEmpty={!activityLoading && !activityError && recentActivity.length === 0}
+          emptyMessage="Nothing yet - create a strategy, run a backtest, or add a stock to your watchlist."
+        >
+          {recentActivity.map((activity) => (
+            <li key={activity.id} className="flex items-center justify-between gap-4 px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-100">{activity.title}</p>
+                <p className="truncate text-xs text-slate-500">{activity.detail}</p>
+              </div>
+              <span className="shrink-0 text-xs text-slate-500">{formatRelativeTime(activity.timestamp, new Date())}</span>
             </li>
           ))}
         </RecentSection>
@@ -199,22 +266,17 @@ export function DashboardPage() {
       >
         {watchlistPreview.map((item) => (
           <li key={item.id} className="flex items-center justify-between px-4 py-3">
-            <p className="font-medium text-slate-100">{item.symbol}</p>
-            <span className="text-xs text-slate-500">
-              Added {new Date(item.addedAt).toLocaleDateString()}
-            </span>
+            <button
+              type="button"
+              onClick={() => goToChart(item.symbol)}
+              className="font-medium text-slate-100 hover:text-brand-300"
+            >
+              {item.symbol}
+            </button>
+            <span className="text-xs text-slate-500">Added {new Date(item.addedAt).toLocaleDateString()}</span>
           </li>
         ))}
       </RecentSection>
-
-      {strategies && strategies.length === 0 && (
-        <div className="rounded-xl border border-surface-border bg-surface-raised p-6 text-center">
-          <p className="text-sm text-slate-400">Get started by building your first strategy.</p>
-          <Link to="/strategies/new" className={`${buttonClassName} mt-3`}>
-            New Strategy
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
