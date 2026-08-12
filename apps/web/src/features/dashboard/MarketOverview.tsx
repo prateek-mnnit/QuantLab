@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCandles } from '../market-data/useMarketData';
+import { useChartViewStore } from '../../store/chartViewStore';
 import { computeIndexChange } from './marketOverviewMath';
 
 /**
@@ -28,8 +30,16 @@ const numberFormatter = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 
  * market strips common to Indian trading apps - four small cards, each
  * independently loading/failing so one bad symbol never blanks out the
  * other three or the rest of the Dashboard.
+ *
+ * Each card is clickable, reusing the EXACT same mechanism
+ * `DashboardPage`'s own Watchlist preview uses to open the Chart page for
+ * a symbol: `chartViewStore`'s `selectSymbol` action, then `navigate`d to
+ * the existing `/chart` route - not a second navigation/state system.
  */
 export function MarketOverview() {
+  const navigate = useNavigate();
+  const selectChartSymbol = useChartViewStore((state) => state.selectSymbol);
+
   // BUG FIX (post-Group-AJ): `to`/`from` used to be computed as `new
   // Date()` directly in the component body, which meant a NEW Date
   // instance - a different millisecond timestamp - on every render.
@@ -63,6 +73,16 @@ export function MarketOverview() {
 
   const queries = [nifty50, sensex, niftyBank, niftyIt];
 
+  function openChart(index: { symbol: string; label: string }): void {
+    // Same store action + route DashboardPage's Watchlist preview already
+    // uses (see `goToChart` in DashboardPage.tsx) - `name` is the index's
+    // display label (e.g. "NIFTY 50") rather than the bare symbol, since
+    // that's more readable than "^NSEI" and, unlike a WatchlistItem, an
+    // index label is already known here.
+    selectChartSymbol({ symbol: index.symbol, name: index.label, exchange: '' });
+    navigate('/chart');
+  }
+
   return (
     <section className="space-y-3">
       <h2 className="text-sm font-semibold text-slate-200">Market Overview</h2>
@@ -74,6 +94,7 @@ export function MarketOverview() {
             isLoading={queries[i]!.isLoading}
             isError={queries[i]!.isError}
             candles={queries[i]!.data}
+            onClick={() => openChart(index)}
           />
         ))}
       </div>
@@ -86,16 +107,23 @@ function IndexCard({
   isLoading,
   isError,
   candles,
+  onClick,
 }: {
   label: string;
   isLoading: boolean;
   isError: boolean;
   candles: Parameters<typeof computeIndexChange>[0] | undefined;
+  onClick: () => void;
 }) {
   const change = candles ? computeIndexChange(candles) : null;
 
   return (
-    <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Open ${label} chart`}
+      className="w-full rounded-xl border border-surface-border bg-surface-raised p-4 text-left transition-colors hover:border-brand-500/40 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+    >
       <p className="text-xs font-medium text-slate-400">{label}</p>
 
       {isLoading && (
@@ -116,6 +144,6 @@ function IndexCard({
           </p>
         </>
       )}
-    </div>
+    </button>
   );
 }
