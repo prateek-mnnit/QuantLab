@@ -174,13 +174,9 @@ export function StrategyBuilderPage() {
         <Button type="submit" isLoading={mutation.isPending}>
           {isEditMode ? 'Save changes' : 'Create strategy'}
         </Button>
-        <button
-          type="button"
-          onClick={() => navigate('/strategies')}
-          className="text-sm font-medium text-slate-400 hover:text-slate-200"
-        >
+        <Button type="button" variant="secondary" onClick={() => navigate('/strategies')}>
           Cancel
-        </button>
+        </Button>
       </div>
     </form>
   );

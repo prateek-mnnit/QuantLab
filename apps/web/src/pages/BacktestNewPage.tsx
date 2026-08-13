@@ -157,13 +157,9 @@ export function BacktestNewPage() {
           <Button type="submit" isLoading={runBacktest.isPending}>
             Run Backtest
           </Button>
-          <button
-            type="button"
-            onClick={() => navigate('/strategies')}
-            className="text-sm font-medium text-slate-400 hover:text-slate-200"
-          >
+          <Button type="button" variant="secondary" onClick={() => navigate('/strategies')}>
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
     </div>

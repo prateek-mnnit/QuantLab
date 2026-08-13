@@ -20,11 +20,25 @@ function formatPct(value: number | null): string {
   return value === null ? '—' : `${value.toFixed(2)}%`;
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  /** 'profit'/'loss' color the value green/red; 'risk' is the same red used
+      for loss, kept as a separate name so call sites read as intent
+      (Max Drawdown isn't literally a loss figure, but should still visually
+      communicate risk) rather than a coincidental color match. */
+  tone?: 'profit' | 'loss' | 'risk';
+}) {
+  const toneClass =
+    tone === 'profit' ? 'text-profit' : tone === 'loss' || tone === 'risk' ? 'text-loss' : 'text-slate-100';
   return (
     <div>
       <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold text-slate-100">{value}</dd>
+      <dd className={`mt-1 text-lg font-semibold ${toneClass}`}>{value}</dd>
     </div>
   );
 }
@@ -83,10 +97,14 @@ export function BacktestDetailPage() {
 
         {run.status === 'COMPLETED' && (
           <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <Metric label="Total return" value={formatPct(run.totalReturnPct)} />
+            <Metric
+              label="Total return"
+              value={formatPct(run.totalReturnPct)}
+              tone={run.totalReturnPct === null ? undefined : run.totalReturnPct >= 0 ? 'profit' : 'loss'}
+            />
             <Metric label="Win rate" value={formatPct(run.winRate)} />
             <Metric label="Profit factor" value={run.profitFactor?.toFixed(2) ?? '—'} />
-            <Metric label="Max drawdown" value={formatPct(run.maxDrawdownPct)} />
+            <Metric label="Max drawdown" value={formatPct(run.maxDrawdownPct)} tone="risk" />
             <Metric label="Sharpe ratio" value={run.sharpeRatio?.toFixed(2) ?? '—'} />
             <Metric label="Total trades" value={run.totalTrades?.toString() ?? '—'} />
           </dl>

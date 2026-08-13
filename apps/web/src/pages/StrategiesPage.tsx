@@ -4,6 +4,7 @@ import type { StrategySummary } from '@quantlab/shared-types';
 import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useStrategies, useDeleteStrategy } from '../features/strategies/useStrategies';
 import { buttonClassName } from '../components/Button';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 export function StrategiesPage() {
   const { data: strategies, isLoading, isError } = useStrategies();
@@ -11,11 +12,28 @@ export function StrategiesPage() {
   // Tracks which row's delete is in flight so only THAT row's button shows
   // a loading state, rather than every row disabling at once.
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // The strategy currently targeted by the confirm dialog - holding the
+  // whole { id, name } pair (not just an id) lets the dialog show the
+  // strategy's name without a second lookup, and `null` doubles as
+  // "dialog closed".
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
-  function handleDelete(id: string, name: string): void {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  function handleRequestDelete(id: string, name: string): void {
+    setDeleteTarget({ id, name });
+  }
+
+  function handleCancelDelete(): void {
+    setDeleteTarget(null);
+  }
+
+  function handleConfirmDelete(): void {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
     setPendingDeleteId(id);
-    deleteStrategy.mutate(id, { onSettled: () => setPendingDeleteId(null) });
+    deleteStrategy.mutate(id, {
+      onSettled: () => setPendingDeleteId(null),
+      onSuccess: () => setDeleteTarget(null),
+    });
   }
 
   // Group AH: built-in strategies are PRODUCT-LEVEL content - they ship
@@ -67,7 +85,7 @@ export function StrategiesPage() {
               </p>
             </div>
             {builtInStrategies.length > 0 ? (
-              <StrategyTable strategies={builtInStrategies} pendingDeleteId={pendingDeleteId} onDelete={handleDelete} />
+              <StrategyTable strategies={builtInStrategies} pendingDeleteId={pendingDeleteId} onDelete={handleRequestDelete} />
             ) : (
               <div className="rounded-xl border border-dashed border-surface-border p-6 text-center">
                 <p className="text-sm text-slate-400">No built-in strategies available yet.</p>
@@ -78,7 +96,7 @@ export function StrategiesPage() {
           <section className="space-y-3">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">My Strategies</h2>
             {myStrategies.length > 0 ? (
-              <StrategyTable strategies={myStrategies} pendingDeleteId={pendingDeleteId} onDelete={handleDelete} />
+              <StrategyTable strategies={myStrategies} pendingDeleteId={pendingDeleteId} onDelete={handleRequestDelete} />
             ) : (
               <div className="rounded-xl border border-dashed border-surface-border p-10 text-center">
                 <p className="text-sm text-slate-400">
@@ -90,6 +108,18 @@ export function StrategiesPage() {
           </section>
         </>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={`Delete "${deleteTarget?.name ?? ''}"?`}
+        description="This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        isConfirming={deleteTarget !== null && pendingDeleteId === deleteTarget.id}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 }
