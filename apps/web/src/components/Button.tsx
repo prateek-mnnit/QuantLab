@@ -9,17 +9,30 @@ import type { ButtonHTMLAttributes } from 'react';
  * UI-2: kept as a plain constant (rather than folded into `buttonClasses`
  * below) specifically so existing call sites importing `buttonClassName`
  * for the primary look keep compiling unchanged.
+ *
+ * UI-4 (revised): `bg-accent-500` resolves to QuantLab's restrained green
+ * (tailwind.config.js) - the primary button is one of the few places that
+ * color is deliberately used, since "the main action on the page" is
+ * exactly the kind of meaningful, non-decorative use the brief calls for.
  */
 export const buttonClassName =
-  'inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60';
+  'inline-flex items-center justify-center rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-60';
 
 /**
  * Secondary/outline look for genuine secondary actions (Cancel, etc.) that
  * still need `<Link>` parity the way `buttonClassName` does for primary
  * ones - exported for the same reason.
+ *
+ * UI-4: hovers via a subtle white overlay tint rather than jumping to a
+ * specific surface tier - this button gets used on the plain page
+ * background, inside `surface-raised` cards, AND inside `surface-elevated`
+ * modals (see ConfirmDialog); a relative lightening tint stays visibly
+ * different from its container in all three contexts, where hovering to
+ * any one fixed tier would disappear in whichever context already uses
+ * that exact color.
  */
 export const secondaryButtonClassName =
-  'inline-flex items-center justify-center rounded-lg border border-surface-border bg-transparent px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-surface-raised disabled:cursor-not-allowed disabled:opacity-60';
+  'inline-flex items-center justify-center rounded-lg border border-surface-border bg-transparent px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60';
 
 type ButtonVariant = 'primary' | 'secondary';
 

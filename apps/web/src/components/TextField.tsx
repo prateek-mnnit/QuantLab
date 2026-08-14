@@ -12,6 +12,11 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
  * input for accessibility (clicking the label focuses the field, and
  * screen readers announce it correctly) without every call site having to
  * remember to wire that up itself.
+ *
+ * UI-4 (revised): the focus ring is neutral (`slate-400`), not the green
+ * accent - every text field on the page focusing green on every keystroke
+ * flow would make green the dominant color of the app, which runs against
+ * green staying reserved for primary actions/active nav/success states.
  */
 export function TextField({ label, error, id, className = '', ...props }: TextFieldProps) {
   return (
@@ -21,7 +26,7 @@ export function TextField({ label, error, id, className = '', ...props }: TextFi
       </label>
       <input
         id={id}
-        className={`w-full rounded-lg border border-surface-border bg-surface px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
+        className={`w-full rounded-lg border border-surface-border bg-surface px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:border-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 ${className}`}
         {...props}
       />
       {error && <p className="text-sm text-loss">{error}</p>}

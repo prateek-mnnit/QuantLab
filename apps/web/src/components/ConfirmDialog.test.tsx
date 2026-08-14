@@ -67,4 +67,12 @@ describe('ConfirmDialog', () => {
     expect(screen.getByRole('button', { name: 'Please wait...' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   });
+
+  // UI-4: the dialog panel itself sits at the "elevated" surface tier
+  // (above regular cards), consistent with modals/popovers across the app.
+  it('renders its panel at the elevated surface tier', () => {
+    render(<ConfirmDialog open title="Delete this?" onConfirm={vi.fn()} onCancel={vi.fn()} />);
+
+    expect(screen.getByRole('alertdialog').className).toContain('bg-surface-elevated');
+  });
 });

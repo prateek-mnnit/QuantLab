@@ -15,14 +15,20 @@ interface ConditionLeafEditorProps {
   onRemove: () => void;
 }
 
-/** One row: [left operand] [operator] [right operand] [remove]. */
+/** One row: [left operand] [operator] [right operand] [remove]. UI-3:
+    operator gets its own visually distinct slot between the two operand
+    blocks (rather than sitting in the same flow as their internal
+    controls), and the remove action is now an icon-only button so it
+    reads as "row chrome" rather than competing with the row's own fields
+    for attention. */
 export function ConditionLeafEditor({ leaf, onChange, onRemove }: ConditionLeafEditorProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-surface-border bg-surface p-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-surface-border bg-surface p-3">
       <OperandEditor value={leaf.left} onChange={(left) => onChange({ ...leaf, left })} />
 
       <select
-        className="rounded-md border border-surface-border bg-surface px-2 py-1.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        aria-label="Operator"
+        className="shrink-0 rounded-md border border-surface-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium uppercase tracking-wide text-slate-300 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         value={leaf.operator}
         onChange={(event) => onChange({ ...leaf, operator: event.target.value as ComparisonOperator })}
       >
@@ -38,9 +44,13 @@ export function ConditionLeafEditor({ leaf, onChange, onRemove }: ConditionLeafE
       <button
         type="button"
         onClick={onRemove}
-        className="ml-auto text-xs font-medium text-loss hover:text-loss/80"
+        aria-label="Remove condition"
+        title="Remove condition"
+        className="ml-auto inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-loss/10 hover:text-loss"
       >
-        Remove
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0-.867 12.142A2 2 0 0 1 15.138 20H8.862a2 2 0 0 1-1.995-1.858L6 6" />
+        </svg>
       </button>
     </div>
   );

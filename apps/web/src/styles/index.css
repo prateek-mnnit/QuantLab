@@ -12,4 +12,18 @@
   body {
     @apply bg-surface antialiased;
   }
+
+  /* One consistent keyboard-focus treatment for every focusable element,
+     including plain buttons/links that don't define their own focus ring
+     (e.g. "Cancel", "Sign out"). Replaces the browser's default focus
+     outline - which is bright blue in every major browser - with a
+     neutral off-white ring, not QuantLab's green accent: focus needs to
+     show up on EVERY interactive element, and green is meant to stay
+     restrained to specific primary/active/success moments rather than
+     appearing every time something is tabbed to. Only appears for
+     keyboard navigation via :focus-visible, never on a mouse click. */
+  :focus-visible {
+    outline: 2px solid theme('colors.slate.300');
+    outline-offset: 2px;
+  }
 }

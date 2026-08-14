@@ -43,7 +43,7 @@ export function StrategyTemplatePicker({ onSelectTemplate, onSelectBlank }: Stra
   const cardClassName = (isSelected: boolean): string =>
     `rounded-lg border p-4 text-left transition-colors ${
       isSelected
-        ? 'border-brand-500 bg-brand-500/10'
+        ? 'border-brand-500/60 bg-brand-500/5'
         : 'border-surface-border bg-surface hover:border-slate-600'
     }`;
 

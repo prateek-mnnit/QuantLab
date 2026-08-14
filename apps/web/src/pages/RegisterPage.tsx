@@ -46,7 +46,7 @@ export function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-surface px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500 text-lg font-bold text-white">
+          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-lg font-bold text-surface">
             Q
           </div>
           <h1 className="text-xl font-semibold text-slate-50">Create your account</h1>
@@ -97,7 +97,10 @@ export function RegisterPage() {
 
         <p className="text-center text-sm text-slate-400">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-brand-400 hover:text-brand-300">
+          <Link
+            to="/login"
+            className="font-medium text-slate-200 underline decoration-slate-600 underline-offset-4 transition-colors hover:text-slate-50 hover:decoration-slate-400"
+          >
             Sign in
           </Link>
         </p>

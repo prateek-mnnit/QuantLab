@@ -7,7 +7,7 @@ interface OperandEditorProps {
 }
 
 const selectClass =
-  'rounded-md border border-surface-border bg-surface px-2 py-1.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
+  'rounded-md border border-surface-border bg-surface-raised px-2 py-1.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
 const numberInputClass = `${selectClass} w-20`;
 
 /**
@@ -17,6 +17,11 @@ const numberInputClass = `${selectClass} w-20`;
  * mirroring the `operandSchema` discriminated union from shared-types
  * exactly, so whatever this produces is guaranteed to match one of its
  * three valid shapes.
+ *
+ * UI-3: the whole control set renders inside a subtly-shaded box so an
+ * indicator's source + type + params reads as ONE unit at a glance,
+ * separate from the operator select and the other side's operand in
+ * ConditionLeafEditor's row.
  */
 export function OperandEditor({ value, onChange }: OperandEditorProps) {
   function handleSourceChange(source: ConditionOperand['source']): void {
@@ -30,7 +35,7 @@ export function OperandEditor({ value, onChange }: OperandEditorProps) {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-md bg-surface p-1.5">
       <select
         className={selectClass}
         value={value.source}

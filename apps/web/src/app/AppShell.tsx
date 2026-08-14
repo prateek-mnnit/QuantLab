@@ -28,6 +28,13 @@ const NAV_ITEMS: Array<{ to: string; label: string; end?: boolean }> = [
  * nav and the mobile dropdown, so there's exactly one place that defines
  * "what's in the nav". Routing/auth behavior is untouched; this is purely
  * a smaller-screen presentation of the same links and controls.
+ *
+ * UI-4 (revised): the active nav item is one of the few places that uses
+ * QuantLab's green accent directly (`text-accent-400`) - a deliberately
+ * restrained, meaningful use rather than coloring every link, per the
+ * "green should stay meaningful, not used everywhere" direction. The logo
+ * mark is neutral (off-white), not accent-colored, so branding chrome
+ * doesn't compete with that same green for attention.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const { data, isError, isLoading } = useSystemStatus();
@@ -52,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 font-bold text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 font-bold text-surface">
                 Q
               </div>
               <span className="text-lg font-semibold tracking-tight text-slate-50">
@@ -68,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `${NAV_LINK_BASE} ${isActive ? 'text-slate-100' : 'text-slate-400'}`
+                    `${NAV_LINK_BASE} ${isActive ? 'text-accent-400' : 'text-slate-400'}`
                   }
                 >
                   {item.label}
@@ -134,7 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onClick={closeMenu}
                   className={({ isActive }) =>
                     `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      isActive ? 'bg-surface text-slate-100' : 'text-slate-400 hover:bg-surface hover:text-slate-100'
+                      isActive ? 'bg-surface text-accent-400' : 'text-slate-400 hover:bg-surface hover:text-slate-100'
                     }`
                   }
                 >

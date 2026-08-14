@@ -11,6 +11,7 @@ const fieldNumberClass = `${fieldSelectClass} w-24`;
 
 interface OptionalRiskControlProps<T extends { type: string; value: number }> {
   label: string;
+  helperText: string;
   config: T | null | undefined;
   types: { value: string; label: string }[];
   onChange: (config: T | null) => void;
@@ -24,6 +25,7 @@ interface OptionalRiskControlProps<T extends { type: string; value: number }> {
  */
 function OptionalRiskControl<T extends { type: string; value: number }>({
   label,
+  helperText,
   config,
   types,
   onChange,
@@ -32,19 +34,21 @@ function OptionalRiskControl<T extends { type: string; value: number }>({
 
   return (
     <div className="rounded-lg border border-surface-border p-4">
-      <label className="flex items-center gap-2 text-sm font-medium text-slate-200">
+      <label className="flex items-center gap-2.5 text-sm font-medium text-slate-200">
         <input
           type="checkbox"
           checked={enabled}
+          className="h-4 w-4 accent-brand-500"
           onChange={(event) =>
             onChange(event.target.checked ? ({ type: types[0]!.value, value: 1 } as T) : null)
           }
         />
         {label}
       </label>
+      <p className="mt-1 pl-6 text-xs text-slate-500">{helperText}</p>
 
       {enabled && config && (
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 pl-6">
           <select
             className={fieldSelectClass}
             value={config.type}
@@ -81,6 +85,10 @@ interface RiskManagementFieldsProps {
   onPositionSizingChange: (config: PositionSizingConfig) => void;
 }
 
+/** UI-3: no longer renders its own section heading - `StrategyBuilderPage`
+    now wraps this in a `BuilderSection` that already provides the
+    "Risk management" title/description, matching the Entry/Exit sections
+    above it. */
 export function RiskManagementFields({
   stopLossConfig,
   takeProfitConfig,
@@ -93,10 +101,10 @@ export function RiskManagementFields({
 }: RiskManagementFieldsProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-semibold text-slate-200">Risk management</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <OptionalRiskControl
           label="Stop loss"
+          helperText="Automatically exit the position if price moves against you by this amount."
           config={stopLossConfig}
           onChange={onStopLossChange}
           types={[
@@ -107,6 +115,7 @@ export function RiskManagementFields({
         />
         <OptionalRiskControl
           label="Take profit"
+          helperText="Automatically exit the position once it reaches this amount of profit."
           config={takeProfitConfig}
           onChange={onTakeProfitChange}
           types={[
@@ -117,6 +126,7 @@ export function RiskManagementFields({
         />
         <OptionalRiskControl
           label="Trailing stop"
+          helperText="Follows price as it moves in your favor, locking in gains if it reverses."
           config={trailingStopConfig}
           onChange={onTrailingStopChange}
           types={[
@@ -130,6 +140,7 @@ export function RiskManagementFields({
             rather than being routed through OptionalRiskControl. */}
         <div className="rounded-lg border border-surface-border p-4">
           <p className="text-sm font-medium text-slate-200">Position sizing</p>
+          <p className="mt-1 text-xs text-slate-500">How much to buy or sell whenever this strategy enters a trade.</p>
           <div className="mt-3 flex items-center gap-2">
             <select
               className={fieldSelectClass}

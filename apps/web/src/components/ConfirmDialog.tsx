@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { buttonClassName } from './Button';
+import { buttonClassName, secondaryButtonClassName } from './Button';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -66,7 +66,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby={description ? 'confirm-dialog-description' : undefined}
-        className="w-full max-w-sm rounded-xl border border-surface-border bg-surface-raised p-6 shadow-lg"
+        className="w-full max-w-sm rounded-xl border border-surface-border bg-surface-elevated p-6 shadow-lg"
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="confirm-dialog-title" className="text-lg font-semibold text-slate-50">
@@ -82,7 +82,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="inline-flex items-center justify-center rounded-lg border border-surface-border bg-transparent px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
+            className={secondaryButtonClassName}
           >
             {cancelLabel}
           </button>
