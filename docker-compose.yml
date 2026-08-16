@@ -21,5 +21,45 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: quantlab-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DATABASE_URL=postgresql://quantlab:quantlab_dev_password@postgres:5432/quantlab?schema=public
+      - FRONTEND_URL=http://localhost
+      - JWT_ACCESS_SECRET=docker-dev-access-secret-32-chars-min
+      - JWT_REFRESH_SECRET=docker-dev-refresh-secret-32-chars-min
+      - JWT_ACCESS_EXPIRY=15m
+      - JWT_REFRESH_EXPIRY_DAYS=30
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: quantlab-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '80:80'
+
 volumes:
   quantlab_postgres_data:
