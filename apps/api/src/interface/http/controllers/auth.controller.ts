@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import type { ApiSuccessResponse, AuthUser, LoginResult } from '@quantlab/shared-types';
+import type { ApiSuccessResponse, LoginResult } from '@quantlab/shared-types';
 import type { RegisterUseCase } from '../../../application/auth/RegisterUseCase.js';
 import type { LoginUseCase } from '../../../application/auth/LoginUseCase.js';
 import type { RefreshTokenUseCase } from '../../../application/auth/RefreshTokenUseCase.js';
@@ -44,8 +44,17 @@ export function createAuthController(dependencies: {
 
   return {
     async register(req: Request, res: Response): Promise<void> {
-      const user = await registerUseCase.execute(req.body);
-      const body: ApiSuccessResponse<AuthUser> = { success: true, data: user };
+      await registerUseCase.execute(req.body);
+      
+      // Automatically authenticate the newly created user using the existing login mechanism
+      const result = await loginUseCase.execute(req.body);
+
+      res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, refreshCookieOptions(refreshMaxAgeMs));
+
+      const body: ApiSuccessResponse<LoginResult> = {
+        success: true,
+        data: { user: result.user, tokens: { accessToken: result.accessToken } },
+      };
       res.status(201).json(body);
     },
 

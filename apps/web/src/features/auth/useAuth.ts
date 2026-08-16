@@ -15,13 +15,15 @@ export function useLogin() {
 }
 
 export function useRegister() {
-  // Registration deliberately does NOT log the user in - it just creates
-  // the account. Keeping "create an account" and "start a session" as two
-  // separate, explicit steps is simpler to reason about than an implicit
-  // auto-login, and matches what most real products do (confirm the
-  // account exists, then send the user to log in).
+  const setSession = useAuthStore((state) => state.setSession);
+
+  // Registration now automatically logs the user in by reusing the same
+  // login mechanism in the backend.
   return useMutation({
     mutationFn: (payload: RegisterPayload) => registerRequest(payload),
+    onSuccess: (result) => {
+      setSession(result.user, result.tokens.accessToken);
+    },
   });
 }
 

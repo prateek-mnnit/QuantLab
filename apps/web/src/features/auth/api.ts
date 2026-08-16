@@ -1,8 +1,8 @@
-import type { AuthUser, LoginPayload, LoginResult, RegisterPayload } from '@quantlab/shared-types';
+import type { LoginPayload, LoginResult, RegisterPayload } from '@quantlab/shared-types';
 import { apiRequest } from '../../lib/api-client';
 
-export function registerRequest(payload: RegisterPayload): Promise<AuthUser> {
-  return apiRequest<AuthUser>('/auth/register', {
+export function registerRequest(payload: RegisterPayload): Promise<LoginResult> {
+  return apiRequest<LoginResult>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

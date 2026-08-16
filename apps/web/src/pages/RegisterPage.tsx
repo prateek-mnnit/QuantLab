@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 import { useRegister } from '../features/auth/useAuth';
 import { TextField } from '../components/TextField';
 import { Button } from '../components/Button';
@@ -27,6 +28,16 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [clientError, setClientError] = useState<string | null>(null);
   const register = useRegister();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const authStatus = useAuthStore((state) => state.status);
+
+  useEffect(() => {
+    if (authStatus === 'authenticated') {
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
+    }
+  }, [authStatus, navigate, location]);
 
   function handleSubmit(event: FormEvent): void {
     event.preventDefault();
@@ -35,8 +46,8 @@ export function RegisterPage() {
       setClientError('Passwords do not match.');
       return;
     }
-    if (password.length < 8) {
-      setClientError('Password must be at least 8 characters.');
+    if (password.length < 12) {
+      setClientError('Password must be at least 12 characters.');
       return;
     }
     register.mutate({ email, password });
@@ -86,7 +97,7 @@ export function RegisterPage() {
               id="password"
               label="Password"
               type="password"
-              placeholder="Min 8 characters"
+              placeholder="Min 12 characters"
               autoComplete="new-password"
               required
               value={password}
