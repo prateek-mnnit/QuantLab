@@ -21,8 +21,11 @@ describe('Auth', () => {
         .send({ email, password: TEST_PASSWORD })
         .expect(201);
 
-      expect(response.body).toEqual({ success: true, data: { id: expect.any(String), email } });
-      expect(response.body.data).not.toHaveProperty('passwordHash');
+      expect(response.body).toEqual({
+        success: true,
+        data: { user: { id: expect.any(String), email }, tokens: { accessToken: expect.any(String) } },
+      });
+      expect(response.body.data.user).not.toHaveProperty('passwordHash');
     });
 
     it('lowercases and trims the email the same way registerSchema declares', async () => {
@@ -33,7 +36,7 @@ describe('Auth', () => {
         .send({ email: `  ${rawEmail}  `, password: TEST_PASSWORD })
         .expect(201);
 
-      expect(response.body.data.email).toBe(rawEmail.toLowerCase());
+      expect(response.body.data.user.email).toBe(rawEmail.toLowerCase());
     });
 
     it('rejects a password shorter than the 12-character minimum with a 400', async () => {
