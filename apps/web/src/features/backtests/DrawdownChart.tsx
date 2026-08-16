@@ -69,7 +69,7 @@ export function DrawdownChart({ trades, height = 160 }: DrawdownChartProps) {
   }, [points]);
 
   if (points.length === 0) {
-    return <p className="text-sm text-slate-500">Not enough data to show drawdown.</p>;
+    return <p className="text-sm text-zinc-500">Not enough data to show drawdown.</p>;
   }
 
   return <div ref={containerRef} className="w-full" />;

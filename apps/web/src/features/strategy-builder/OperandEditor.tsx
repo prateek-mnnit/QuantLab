@@ -7,7 +7,7 @@ interface OperandEditorProps {
 }
 
 const selectClass =
-  'rounded-md border border-surface-border bg-surface-raised px-2 py-1.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
+  'rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600/30 transition-colors';
 const numberInputClass = `${selectClass} w-20`;
 
 /**
@@ -35,7 +35,7 @@ export function OperandEditor({ value, onChange }: OperandEditorProps) {
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-md bg-surface p-1.5">
+    <div className="flex min-w-0 flex-wrap items-center gap-2 rounded-md bg-zinc-800/50 p-1.5">
       <select
         className={selectClass}
         value={value.source}
@@ -76,7 +76,7 @@ export function OperandEditor({ value, onChange }: OperandEditorProps) {
           </select>
 
           {INDICATOR_CATALOG[value.indicator as IndicatorType].params.map((param) => (
-            <label key={param.key} className="flex items-center gap-1 text-xs text-slate-500">
+            <label key={param.key} className="flex items-center gap-1 text-xs text-zinc-500">
               {param.label}
               <input
                 type="number"

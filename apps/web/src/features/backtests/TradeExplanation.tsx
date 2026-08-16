@@ -29,7 +29,7 @@ export function TradeExplanation({ explanation, depth = 0 }: TradeExplanationPro
   const resultBadge = (
     <span
       className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-        explanation.result ? 'bg-profit/20 text-profit' : 'bg-slate-600/30 text-slate-500'
+        explanation.result ? 'bg-profit/20 text-profit' : 'bg-zinc-700/50 text-zinc-500'
       }`}
     >
       {explanation.result ? '✓' : '✗'}
@@ -40,7 +40,7 @@ export function TradeExplanation({ explanation, depth = 0 }: TradeExplanationPro
     return (
       <div className="flex items-center gap-2 py-1 text-sm" style={{ marginLeft: depth * 16 }}>
         {resultBadge}
-        <span className="text-slate-300">
+        <span className="text-zinc-400">
           {formatValue(explanation.leftValue)} {OPERATOR_LABEL[explanation.operator] ?? explanation.operator}{' '}
           {formatValue(explanation.rightValue)}
         </span>
@@ -52,7 +52,7 @@ export function TradeExplanation({ explanation, depth = 0 }: TradeExplanationPro
     <div style={{ marginLeft: depth * 16 }}>
       <div className="flex items-center gap-2 py-1 text-sm">
         {resultBadge}
-        <span className="font-medium text-slate-200">{explanation.type === 'AND' ? 'ALL of:' : 'ANY of:'}</span>
+        <span className="font-medium text-zinc-300">{explanation.type === 'AND' ? 'ALL of:' : 'ANY of:'}</span>
       </div>
       {explanation.children.map((child) => (
         <TradeExplanation key={child.id} explanation={child} depth={depth + 1} />

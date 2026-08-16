@@ -6,7 +6,7 @@ import type {
 } from '@quantlab/shared-types';
 
 const fieldSelectClass =
-  'rounded-md border border-surface-border bg-surface px-2 py-1.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
+  'rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-sm text-zinc-100 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600/30 transition-colors';
 const fieldNumberClass = `${fieldSelectClass} w-24`;
 
 interface OptionalRiskControlProps<T extends { type: string; value: number }> {
@@ -33,19 +33,19 @@ function OptionalRiskControl<T extends { type: string; value: number }>({
   const enabled = Boolean(config);
 
   return (
-    <div className="rounded-lg border border-surface-border p-4">
-      <label className="flex items-center gap-2.5 text-sm font-medium text-slate-200">
+    <div className="rounded-lg border border-zinc-800 p-4">
+      <label className="flex items-center gap-2.5 text-sm font-medium text-zinc-200">
         <input
           type="checkbox"
           checked={enabled}
-          className="h-4 w-4 accent-brand-500"
+          className="h-4 w-4 accent-accent-500"
           onChange={(event) =>
             onChange(event.target.checked ? ({ type: types[0]!.value, value: 1 } as T) : null)
           }
         />
         {label}
       </label>
-      <p className="mt-1 pl-6 text-xs text-slate-500">{helperText}</p>
+      <p className="mt-1 pl-6 text-xs text-zinc-600">{helperText}</p>
 
       {enabled && config && (
         <div className="mt-3 flex items-center gap-2 pl-6">
@@ -138,9 +138,9 @@ export function RiskManagementFields({
         {/* Position sizing is always required (never null), unlike the
             three optional controls above, so it gets its own fixed block
             rather than being routed through OptionalRiskControl. */}
-        <div className="rounded-lg border border-surface-border p-4">
-          <p className="text-sm font-medium text-slate-200">Position sizing</p>
-          <p className="mt-1 text-xs text-slate-500">How much to buy or sell whenever this strategy enters a trade.</p>
+        <div className="rounded-lg border border-zinc-800 p-4">
+          <p className="text-sm font-medium text-zinc-200">Position sizing</p>
+          <p className="mt-1 text-xs text-zinc-600">How much to buy or sell whenever this strategy enters a trade.</p>
           <div className="mt-3 flex items-center gap-2">
             <select
               className={fieldSelectClass}

@@ -20,29 +20,29 @@ export function MonthlyPerformanceTable({ trades }: MonthlyPerformanceTableProps
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-surface-border">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800">
       <table className="w-full min-w-[500px] text-left text-sm">
-        <thead className="bg-surface-raised text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-b border-zinc-800 bg-zinc-900/80">
           <tr>
-            <th className="px-4 py-3 font-medium">Month</th>
-            <th className="px-4 py-3 font-medium">Trades</th>
-            <th className="px-4 py-3 font-medium">Profit %</th>
-            <th className="px-4 py-3 font-medium">Net P&amp;L</th>
-            <th className="px-4 py-3 font-medium">Win Rate</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Month</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Trades</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Profit %</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Net P&amp;L</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Win Rate</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-surface-border">
+        <tbody className="divide-y divide-zinc-800/50">
           {months.map((month) => (
-            <tr key={month.monthKey} className="text-slate-200">
-              <td className="px-4 py-3">{month.monthLabel}</td>
-              <td className="px-4 py-3 text-slate-400">{month.tradeCount}</td>
-              <td className={`px-4 py-3 font-medium ${month.profitPct >= 0 ? 'text-profit' : 'text-loss'}`}>
+            <tr key={month.monthKey} className="transition-colors hover:bg-zinc-800/30">
+              <td className="px-3 py-2.5 text-sm text-zinc-200">{month.monthLabel}</td>
+              <td className="px-3 py-2.5 text-sm tabular-nums text-zinc-500">{month.tradeCount}</td>
+              <td className={`px-3 py-2.5 text-sm font-semibold tabular-nums ${month.profitPct >= 0 ? 'text-profit' : 'text-loss'}`}>
                 {month.profitPct.toFixed(2)}%
               </td>
-              <td className={`px-4 py-3 font-medium ${month.netPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+              <td className={`px-3 py-2.5 text-sm font-semibold tabular-nums ${month.netPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                 {month.netPnl.toFixed(2)}
               </td>
-              <td className="px-4 py-3 text-slate-400">{month.winRate.toFixed(1)}%</td>
+              <td className="px-3 py-2.5 text-sm tabular-nums text-zinc-500">{month.winRate.toFixed(1)}%</td>
             </tr>
           ))}
         </tbody>

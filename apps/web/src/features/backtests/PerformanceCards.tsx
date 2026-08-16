@@ -19,11 +19,11 @@ function formatDuration(hours: number | null): string {
 }
 
 function Card({ label, value, tone }: { label: string; value: string; tone?: 'profit' | 'loss' }) {
-  const toneClass = tone === 'profit' ? 'text-profit' : tone === 'loss' ? 'text-loss' : 'text-slate-100';
+  const toneClass = tone === 'profit' ? 'text-profit' : tone === 'loss' ? 'text-loss' : 'text-zinc-100';
   return (
-    <div className="rounded-lg border border-surface-border bg-surface p-4">
-      <p className="text-xs uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={`mt-1 text-lg font-semibold ${toneClass}`}>{value}</p>
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3.5">
+      <p className="text-xs font-medium uppercase tracking-wider text-zinc-600">{label}</p>
+      <p className={`mt-1.5 text-lg font-semibold tabular-nums ${toneClass}`}>{value}</p>
     </div>
   );
 }

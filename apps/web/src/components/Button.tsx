@@ -1,61 +1,62 @@
 import type { ButtonHTMLAttributes } from 'react';
 
 /**
- * Exported separately from the `Button` component itself so a react-router
- * `<Link>` (which must render an `<a>`, not a `<button>`, to navigate) can
- * look identical to a real button - see the "New Strategy" link in
- * StrategiesPage - without copy-pasting this class string a second time.
+ * QuantLab button system — four variants, three sizes.
  *
- * UI-2: kept as a plain constant (rather than folded into `buttonClasses`
- * below) specifically so existing call sites importing `buttonClassName`
- * for the primary look keep compiling unchanged.
+ * Design decisions:
+ * - Primary: solid green — the ONE place green is used as a fill, reserved
+ *   for the main action on each page. Never use for secondary actions.
+ * - Secondary: transparent with zinc border + hover:bg-white/5 (relative
+ *   overlay tint, not a fixed surface tier, so it works in any context:
+ *   page background, card, modal).
+ * - Ghost: no border, subtle hover — table row actions, icon buttons.
+ * - Danger: red fill — destructive actions only (delete, clear).
  *
- * UI-4 (revised): `bg-accent-500` resolves to QuantLab's restrained green
- * (tailwind.config.js) - the primary button is one of the few places that
- * color is deliberately used, since "the main action on the page" is
- * exactly the kind of meaningful, non-decorative use the brief calls for.
+ * Test constraints:
+ * - buttonClassName must contain 'bg-accent-500' (not accent-600) per Button.test.tsx
+ * - secondaryButtonClassName must contain 'hover:bg-white/5' and 'border-surface-border'
+ * - isLoading shows 'Please wait...' (three dots, not ellipsis)
  */
+
 export const buttonClassName =
-  'inline-flex items-center justify-center rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-600 disabled:cursor-not-allowed disabled:opacity-60';
+  'inline-flex items-center justify-center gap-2 rounded-md bg-accent-500 px-3.5 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-accent-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-500 disabled:cursor-not-allowed disabled:opacity-50';
 
-/**
- * Secondary/outline look for genuine secondary actions (Cancel, etc.) that
- * still need `<Link>` parity the way `buttonClassName` does for primary
- * ones - exported for the same reason.
- *
- * UI-4: hovers via a subtle white overlay tint rather than jumping to a
- * specific surface tier - this button gets used on the plain page
- * background, inside `surface-raised` cards, AND inside `surface-elevated`
- * modals (see ConfirmDialog); a relative lightening tint stays visibly
- * different from its container in all three contexts, where hovering to
- * any one fixed tier would disappear in whichever context already uses
- * that exact color.
- */
 export const secondaryButtonClassName =
-  'inline-flex items-center justify-center rounded-lg border border-surface-border bg-transparent px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60';
+  'inline-flex items-center justify-center gap-2 rounded-md border border-surface-border bg-transparent px-3.5 py-2 text-sm font-medium text-zinc-200 transition-colors duration-150 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-zinc-500 disabled:cursor-not-allowed disabled:opacity-50';
 
-type ButtonVariant = 'primary' | 'secondary';
+export const ghostButtonClassName =
+  'inline-flex items-center justify-center gap-2 rounded-md bg-transparent px-3 py-1.5 text-sm font-medium text-zinc-400 transition-colors duration-150 hover:bg-white/5 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-zinc-500 disabled:cursor-not-allowed disabled:opacity-50';
 
-const VARIANT_CLASSNAME: Record<ButtonVariant, string> = {
-  primary: buttonClassName,
+export const dangerButtonClassName =
+  'inline-flex items-center justify-center gap-2 rounded-md bg-red-600 px-3.5 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500 disabled:cursor-not-allowed disabled:opacity-50';
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type ButtonSize   = 'sm' | 'md' | 'lg';
+
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
+  primary:   buttonClassName,
   secondary: secondaryButtonClassName,
+  ghost:     ghostButtonClassName,
+  danger:    dangerButtonClassName,
+};
+
+const SIZE_OVERRIDES: Record<ButtonSize, string> = {
+  sm: 'px-2.5 py-1.5 text-xs rounded',
+  md: '',  // default — no override needed
+  lg: 'px-4 py-2.5 text-base',
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
-  /** Defaults to 'primary' so every existing call site keeps its current look. */
   variant?: ButtonVariant;
+  size?: ButtonSize;
 }
 
 /**
- * One button primitive shared by every form in the app, rather than each
- * page hand-styling its own <button>. `isLoading` disables the button AND
- * swaps its label - callers pass a mutation's `isPending` flag straight
- * through instead of writing that ternary themselves at every call site.
- *
- * `variant="secondary"` gives a proper outline treatment for genuine
- * secondary actions (Cancel, etc.) instead of each page hand-rolling its
- * own plain-text button for that.
+ * Single button primitive for the entire app. Props:
+ * - `isLoading` — disables the button and shows "Please wait..."
+ * - `variant`   — 'primary' | 'secondary' | 'ghost' | 'danger'
+ * - `size`      — 'sm' | 'md' | 'lg'
  */
 export function Button({
   isLoading,
@@ -63,15 +64,33 @@ export function Button({
   children,
   className = '',
   variant = 'primary',
+  size = 'md',
   ...props
 }: ButtonProps) {
+  const base = VARIANT_CLASS[variant];
+  const sizeOverride = SIZE_OVERRIDES[size];
   return (
     <button
       disabled={disabled || isLoading}
-      className={`${VARIANT_CLASSNAME[variant]} ${className}`}
+      className={`${base} ${sizeOverride} ${className}`.trim()}
       {...props}
     >
-      {isLoading ? 'Please wait...' : children}
+      {isLoading ? (
+        <>
+          <svg
+            className="h-3.5 w-3.5 animate-spin"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          <span>Please wait...</span>
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }

@@ -21,7 +21,7 @@ export function ExitReasonBreakdown({ trades }: ExitReasonBreakdownProps) {
   const breakdown = useMemo(() => computeExitReasonBreakdown(trades), [trades]);
 
   if (breakdown.length === 0) {
-    return <p className="text-sm text-slate-500">Not enough data to show an exit reason breakdown.</p>;
+    return <p className="text-sm text-zinc-500">Not enough data to show an exit reason breakdown.</p>;
   }
 
   const maxCount = Math.max(...breakdown.map((row) => row.count));
@@ -30,14 +30,14 @@ export function ExitReasonBreakdown({ trades }: ExitReasonBreakdownProps) {
     <div className="space-y-3">
       {breakdown.map((row) => (
         <div key={row.reason} className="flex items-center gap-3">
-          <p className="w-32 shrink-0 text-xs text-slate-400">{row.label}</p>
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
+          <p className="w-32 shrink-0 text-xs text-zinc-400">{row.label}</p>
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-800">
             <div
-              className="h-full rounded-full bg-brand-500"
+              className="h-full rounded-full bg-accent-500"
               style={{ width: `${(row.count / maxCount) * 100}%` }}
             />
           </div>
-          <p className="w-20 shrink-0 text-right text-xs text-slate-400">
+          <p className="w-20 shrink-0 text-right text-xs tabular-nums text-zinc-500">
             {row.count} ({row.pct.toFixed(0)}%)
           </p>
         </div>

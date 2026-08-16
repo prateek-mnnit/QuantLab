@@ -3,44 +3,43 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { BacktestRun } from '@quantlab/shared-types';
 import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useBacktestsList } from '../features/backtests/useBacktests';
-import { Button } from '../components/Button';
 
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Pending',
-  RUNNING: 'Running',
-  COMPLETED: 'Completed',
-  FAILED: 'Failed',
+const STATUS_STYLES: Record<string, { label: string; cls: string }> = {
+  COMPLETED: { label: 'Completed', cls: 'bg-profit/10 text-profit border-profit/20'    },
+  FAILED:    { label: 'Failed',    cls: 'bg-loss/10 text-loss border-loss/20'          },
+  RUNNING:   { label: 'Running',   cls: 'bg-warning/10 text-warning border-warning/20' },
+  PENDING:   { label: 'Pending',   cls: 'bg-zinc-700/30 text-zinc-400 border-zinc-700' },
 };
 
-/**
- * The one navigation gap comparison needs filled: until now, a past
- * backtest run was only reachable if you still had its URL from just
- * having created it - there was no way to browse run history at all.
- * Only COMPLETED runs are selectable (checkbox disabled otherwise) since a
- * FAILED/PENDING/RUNNING run has no metrics or trades to compare against.
- *
- * Group AH: "Example Backtests" are PRODUCT-LEVEL content, visible to
- * every authenticated user via the same GET /backtests request
- * `useBacktestsList` already made (ListBacktestsUseCase returns "this
- * user's own runs UNION every example run" - see
- * BacktestRunRepository.findManyVisibleToUser), not a second request or a
- * demo account. Comparison still spans both sections through one shared
- * selection - comparing an example run against a personal one is a
- * perfectly normal thing to want to do.
- */
+function StatusBadge({ status }: { status: string }) {
+  const { label, cls } = STATUS_STYLES[status] ?? { label: status, cls: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function ReturnCell({ value }: { value: number | null }) {
+  if (value === null) return <span className="font-mono text-zinc-600">—</span>;
+  const positive = value >= 0;
+  return (
+    <span className={`font-mono font-semibold tabular-nums ${positive ? 'text-profit' : 'text-loss'}`}>
+      {positive ? '+' : ''}{value.toFixed(2)}%
+    </span>
+  );
+}
+
 export function BacktestsPage() {
   const { data: runs, isLoading, isError } = useBacktestsList();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState<'examples' | 'mine'>('examples');
   const navigate = useNavigate();
 
   function toggleSelected(id: string): void {
     setSelectedIds((current) => {
       const next = new Set(current);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
   }
@@ -49,135 +48,171 @@ export function BacktestsPage() {
     navigate(`/backtests/compare?ids=${Array.from(selectedIds).join(',')}`);
   }
 
-  const exampleRuns = runs?.filter((run) => run.isBuiltIn) ?? [];
-  const myRuns = runs?.filter((run) => !run.isBuiltIn) ?? [];
+  const exampleRuns = runs?.filter((r) => r.isBuiltIn)  ?? [];
+  const myRuns      = runs?.filter((r) => !r.isBuiltIn) ?? [];
+  const displayed   = activeTab === 'examples' ? exampleRuns : myRuns;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-50">Backtests</h1>
-          <p className="mt-1 text-sm text-slate-400">Example backtests to explore, and every backtest you&apos;ve run yourself.</p>
+          <h1 className="text-2xl font-semibold text-zinc-100">Backtests</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Explore example runs or view your own backtest history.
+          </p>
         </div>
-        <Button disabled={selectedIds.size < 2} onClick={handleCompare}>
-          Compare Selected ({selectedIds.size})
-        </Button>
+        <div className="flex items-center gap-2">
+          {selectedIds.size >= 2 && (
+            <button
+              type="button"
+              onClick={handleCompare}
+              className="inline-flex items-center gap-2 rounded-md bg-accent-600 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-700"
+            >
+              Compare ({selectedIds.size})
+            </button>
+          )}
+          {selectedIds.size > 0 && selectedIds.size < 2 && (
+            <span className="text-xs text-zinc-500">Select {2 - selectedIds.size} more to compare</span>
+          )}
+        </div>
       </div>
 
-      {isLoading && <p className="text-sm text-slate-400">Loading backtests...</p>}
-      {isError && <p className="text-sm text-loss">Couldn&apos;t load your backtests.</p>}
+      {/* Tabs */}
+      <div className="flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-900 p-0.5 w-fit">
+        {(['examples', 'mine'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className={`rounded px-4 py-1.5 text-sm font-medium transition-colors duration-100 ${
+              activeTab === tab ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            {tab === 'examples' ? `Example Runs (${exampleRuns.length})` : `My Backtests (${myRuns.length})`}
+          </button>
+        ))}
+      </div>
 
+      <p className="text-xs text-zinc-600">
+        {activeTab === 'examples'
+          ? 'Completed backtests generated by QuantLab\'s engine — shared by every account.'
+          : 'Backtests you have run yourself. Select 2+ completed runs to compare.'}
+      </p>
+
+      {/* Loading */}
+      {isLoading && (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-12 animate-pulse rounded-lg bg-zinc-800/50" />
+          ))}
+        </div>
+      )}
+
+      {/* Error */}
+      {isError && (
+        <p className="text-sm text-red-400">Couldn&apos;t load backtests. Please refresh.</p>
+      )}
+
+      {/* Table */}
       {runs && (
-        <>
-          <section className="space-y-3">
-            <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Example Backtests</h2>
-              <p className="mt-0.5 text-xs text-slate-500">
-                Real, completed backtests generated by QuantLab&apos;s own engine - shared by every account.
-              </p>
-            </div>
-            {exampleRuns.length > 0 ? (
-              <BacktestTable runs={exampleRuns} selectedIds={selectedIds} onToggleSelected={toggleSelected} />
-            ) : (
-              <div className="rounded-xl border border-dashed border-surface-border p-6 text-center">
-                <p className="text-sm text-slate-400">No example backtests available yet.</p>
-              </div>
+        displayed.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-zinc-800 px-6 py-12 text-center">
+            <p className="text-sm text-zinc-500">
+              {activeTab === 'mine' ? "You haven't run any backtests yet." : 'No example backtests available.'}
+            </p>
+            {activeTab === 'mine' && (
+              <Link to="/backtests/new" className="mt-3 inline-block text-sm font-medium text-zinc-400 hover:text-zinc-200 transition-colors">
+                Run your first backtest →
+              </Link>
             )}
-          </section>
-
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">My Backtests</h2>
-            {myRuns.length > 0 ? (
-              <BacktestTable runs={myRuns} selectedIds={selectedIds} onToggleSelected={toggleSelected} />
-            ) : (
-              <div className="rounded-xl border border-dashed border-surface-border p-10 text-center">
-                <p className="text-sm text-slate-400">You haven&apos;t run any backtests yet.</p>
-              </div>
-            )}
-          </section>
-        </>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full min-w-[860px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-900/80">
+                  <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">
+                    <span className="sr-only">Select</span>
+                  </th>
+                  <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Symbol</th>
+                  <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Timeframe</th>
+                  <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Period</th>
+                  <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Status</th>
+                  <th className="px-3 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-600">Return</th>
+                  <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Run Date</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium uppercase tracking-wider text-zinc-600">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayed.map((run) => (
+                  <BacktestRow
+                    key={run.id}
+                    run={run}
+                    isSelected={selectedIds.has(run.id)}
+                    onToggle={() => toggleSelected(run.id)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
     </div>
   );
 }
 
-function BacktestTable({
-  runs,
-  selectedIds,
-  onToggleSelected,
+function BacktestRow({
+  run,
+  isSelected,
+  onToggle,
 }: {
-  runs: BacktestRun[];
-  selectedIds: Set<string>;
-  onToggleSelected: (id: string) => void;
+  run: BacktestRun;
+  isSelected: boolean;
+  onToggle: () => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-surface-border">
-      <table className="w-full min-w-[820px] text-left text-sm">
-        <thead className="bg-surface-raised text-xs uppercase tracking-wide text-slate-500">
-          <tr>
-            <th className="px-4 py-3 font-medium">
-              <span className="sr-only">Select</span>
-            </th>
-            <th className="px-4 py-3 font-medium">Symbol</th>
-            <th className="px-4 py-3 font-medium">Timeframe</th>
-            <th className="px-4 py-3 font-medium">Date Range</th>
-            <th className="px-4 py-3 font-medium">Status</th>
-            <th className="px-4 py-3 font-medium">Total Return</th>
-            <th className="px-4 py-3 font-medium">Run Date</th>
-            <th className="px-4 py-3 font-medium">
-              <span className="sr-only">Actions</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-surface-border">
-          {runs.map((run) => (
-            <tr key={run.id} className="text-slate-200">
-              <td className="px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(run.id)}
-                  onChange={() => onToggleSelected(run.id)}
-                  disabled={run.status !== 'COMPLETED'}
-                  aria-label={`Select ${run.symbol} backtest for comparison`}
-                />
-              </td>
-              <td className="px-4 py-3">
-                <Link to={`/backtests/${run.id}`} className="font-medium text-brand-400 hover:text-brand-300">
-                  {run.symbol}
-                </Link>
-              </td>
-              <td className="px-4 py-3 text-slate-400">{TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe}</td>
-              <td className="px-4 py-3 text-slate-400">
-                {new Date(run.dateFrom).toLocaleDateString()} - {new Date(run.dateTo).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3 text-slate-400">{STATUS_LABEL[run.status] ?? run.status}</td>
-              <td
-                className={`px-4 py-3 font-medium ${
-                  run.totalReturnPct === null
-                    ? 'text-slate-500'
-                    : run.totalReturnPct >= 0
-                      ? 'text-profit'
-                      : 'text-loss'
-                }`}
-              >
-                {run.totalReturnPct !== null ? `${run.totalReturnPct.toFixed(2)}%` : '—'}
-              </td>
-              <td className="px-4 py-3 text-slate-400">{new Date(run.createdAt).toLocaleDateString()}</td>
-              {/* Group AH, section 10: a small, explicit discoverability
-                  improvement - previously the symbol name was the ONLY
-                  way to reach the analysis page, with no visual cue that
-                  it was clickable at all. This doesn't replace that link
-                  (left as-is above), just adds an obvious one, without
-                  redesigning the rest of this table. */}
-              <td className="px-4 py-3 text-right">
-                <Link to={`/backtests/${run.id}`} className="text-sm font-medium text-brand-400 hover:text-brand-300">
-                  View Analysis →
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <tr className={`border-b border-zinc-800/50 transition-colors duration-75 last:border-b-0 hover:bg-zinc-800/30 ${isSelected ? 'bg-zinc-800/20' : ''}`}>
+      <td className="px-3 py-3">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={onToggle}
+          disabled={run.status !== 'COMPLETED'}
+          aria-label={`Select ${run.symbol} for comparison`}
+          className="h-3.5 w-3.5 accent-accent-500 disabled:cursor-not-allowed disabled:opacity-40"
+        />
+      </td>
+      <td className="px-3 py-3">
+        <Link to={`/backtests/${run.id}`} className="font-semibold text-zinc-100 hover:text-zinc-300 transition-colors">
+          {run.symbol}
+        </Link>
+      </td>
+      <td className="px-3 py-3 text-sm text-zinc-400">
+        {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe}
+      </td>
+      <td className="px-3 py-3 text-sm text-zinc-500">
+        {new Date(run.dateFrom).toLocaleDateString()} — {new Date(run.dateTo).toLocaleDateString()}
+      </td>
+      <td className="px-3 py-3">
+        <StatusBadge status={run.status} />
+      </td>
+      <td className="px-3 py-3 text-right">
+        <ReturnCell value={run.totalReturnPct} />
+      </td>
+      <td className="px-3 py-3 text-sm text-zinc-500">
+        {new Date(run.createdAt).toLocaleDateString()}
+      </td>
+      <td className="px-4 py-3 text-right">
+        <Link
+          to={`/backtests/${run.id}`}
+          className="inline-flex items-center rounded border border-amber-700/30 bg-transparent px-2.5 py-1 text-xs font-medium text-amber-500 transition-colors hover:border-amber-600/40 hover:text-amber-400 whitespace-nowrap"
+        >
+          View Analysis →
+        </Link>
+      </td>
+    </tr>
   );
 }

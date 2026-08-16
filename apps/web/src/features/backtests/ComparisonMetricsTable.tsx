@@ -36,27 +36,27 @@ const METRIC_ROWS: MetricRow[] = [
  */
 export function ComparisonMetricsTable({ runs }: ComparisonMetricsTableProps) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-surface-border">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800">
       <table className="w-full min-w-[600px] text-left text-sm">
-        <thead className="bg-surface-raised text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-b border-zinc-800 bg-zinc-900/80">
           <tr>
-            <th className="px-4 py-3 font-medium">Metric</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Metric</th>
             {runs.map((run) => (
-              <th key={run.id} className="px-4 py-3 font-medium">
+              <th key={run.id} className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">
                 {run.symbol}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-surface-border">
+        <tbody className="divide-y divide-zinc-800/50">
           {METRIC_ROWS.map((row) => (
-            <tr key={row.label} className="text-slate-200">
-              <td className="px-4 py-3 text-slate-400">{row.label}</td>
+            <tr key={row.label} className="transition-colors hover:bg-zinc-800/30">
+              <td className="px-3 py-2.5 text-sm text-zinc-500">{row.label}</td>
               {runs.map((run) => {
                 const tone = row.tone?.(run);
-                const toneClass = tone === 'profit' ? 'text-profit' : tone === 'loss' ? 'text-loss' : 'text-slate-100';
+                const toneClass = tone === 'profit' ? 'text-profit' : tone === 'loss' ? 'text-loss' : 'text-zinc-100';
                 return (
-                  <td key={run.id} className={`px-4 py-3 font-medium ${toneClass}`}>
+                  <td key={run.id} className={`px-3 py-2.5 font-mono text-sm font-semibold tabular-nums ${toneClass}`}>
                     {row.format(run)}
                   </td>
                 );

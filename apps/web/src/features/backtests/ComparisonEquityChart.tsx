@@ -82,7 +82,7 @@ export function ComparisonEquityChart({ runs, tradesByRun, height = 320 }: Compa
       <div ref={containerRef} className="w-full" />
       <div className="flex flex-wrap gap-4">
         {runs.map((run, index) => (
-          <div key={run.id} className="flex items-center gap-2 text-xs text-slate-400">
+          <div key={run.id} className="flex items-center gap-2 text-xs text-zinc-500">
             <span
               className="h-2 w-2 rounded-full"
               style={{ backgroundColor: SERIES_COLORS[index % SERIES_COLORS.length] }}

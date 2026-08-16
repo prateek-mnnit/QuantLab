@@ -12,7 +12,8 @@ import { Button } from '../components/Button';
 import { ApiError } from '../lib/api-client';
 
 const selectClass =
-  'w-full rounded-lg border border-surface-border bg-surface px-3.5 py-2.5 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500';
+  'w-full rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-600/30 transition-colors disabled:cursor-not-allowed disabled:opacity-50';
+
 
 /** Shared card chrome for the builder's major sections (details, entry,
     exit) - one consistent container instead of each section inventing its
@@ -30,22 +31,23 @@ function BuilderSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-surface-border bg-surface-raised p-5 sm:p-6">
+    <section className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 sm:p-5">
       <div className="mb-4 flex items-start gap-3">
         {icon && (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface text-slate-400">
+          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-zinc-800 text-zinc-400">
             {icon}
           </div>
         )}
         <div>
-          <h2 className="text-sm font-semibold text-slate-100">{title}</h2>
-          {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}
+          <h2 className="text-sm font-semibold text-zinc-100">{title}</h2>
+          {description && <p className="mt-0.5 text-xs text-zinc-500">{description}</p>}
         </div>
       </div>
       {children}
     </section>
   );
 }
+
 
 const EntryIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
@@ -129,7 +131,7 @@ export function StrategyBuilderPage() {
         : null;
 
   if (isEditMode && isLoadingStrategy) {
-    return <p className="text-sm text-slate-400">Loading strategy...</p>;
+    return <p className="text-sm text-zinc-400">Loading strategy…</p>;
   }
 
   return (
@@ -137,19 +139,18 @@ export function StrategyBuilderPage() {
       <div>
         <Link
           to="/strategies"
-          className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-slate-300"
+          className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 transition-colors hover:text-zinc-300"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5" aria-hidden="true">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           Back to strategies
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-50">
-          {isEditMode ? 'Edit strategy' : 'New strategy'}
+        <h1 className="mt-2 text-2xl font-semibold text-zinc-100">
+          {isEditMode ? 'Edit Strategy' : 'New Strategy'}
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Combine indicators with AND/OR logic to define when this strategy enters and exits a
-          position.
+        <p className="mt-1 text-sm text-zinc-500">
+          Combine indicators with AND/OR logic to define when this strategy enters and exits a position.
         </p>
       </div>
 
@@ -172,7 +173,7 @@ export function StrategyBuilderPage() {
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label htmlFor="timeframe" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="timeframe" className="block text-sm font-medium text-zinc-300">
                 Timeframe
               </label>
               <select
@@ -187,7 +188,7 @@ export function StrategyBuilderPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-slate-500">The candle interval this strategy evaluates conditions on.</p>
+              <p className="text-xs text-zinc-600">The candle interval this strategy evaluates conditions on.</p>
             </div>
             <TextField
               id="description"

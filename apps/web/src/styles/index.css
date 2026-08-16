@@ -1,29 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* A handful of base overrides so the app reads as a dark-mode fintech
-   product out of the box, rather than the default Tailwind light theme. */
+/* ─── Base overrides ────────────────────────────────────────────────────── */
 @layer base {
   html {
     color-scheme: dark;
+    /* Prevent iOS text-size-adjust on orientation change */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-surface antialiased;
+    @apply bg-background text-base text-zinc-100 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 
-  /* One consistent keyboard-focus treatment for every focusable element,
-     including plain buttons/links that don't define their own focus ring
-     (e.g. "Cancel", "Sign out"). Replaces the browser's default focus
-     outline - which is bright blue in every major browser - with a
-     neutral off-white ring, not QuantLab's green accent: focus needs to
-     show up on EVERY interactive element, and green is meant to stay
-     restrained to specific primary/active/success moments rather than
-     appearing every time something is tabbed to. Only appears for
-     keyboard navigation via :focus-visible, never on a mouse click. */
+  /* Consistent keyboard-focus ring: off-white, never green (green stays
+     reserved for primary actions/active states, not universal focus). */
   :focus-visible {
-    outline: 2px solid theme('colors.slate.300');
+    outline: 2px solid #52525b; /* zinc-600 */
     outline-offset: 2px;
+  }
+
+  /* Remove default input/select/textarea styling so our custom styles win */
+  input, textarea, select {
+    @apply bg-transparent;
+  }
+
+  /* Scrollbar styling — thin, zinc-toned */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-zinc-700;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-600;
+  }
+
+  /* Tabular number rendering for all monospace financial figures */
+  .font-mono {
+    font-feature-settings: 'tnum', 'zero';
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ─── Reusable component utilities ──────────────────────────────────────── */
+@layer components {
+  /* Card — the standard surface container */
+  .card {
+    @apply rounded-lg border border-surface-border bg-surface-raised;
+  }
+
+  /* Section header — compact uppercase label for data sections */
+  .section-label {
+    @apply text-xs font-medium uppercase tracking-wider text-zinc-500;
+  }
+
+  /* Financial number — always monospaced with tabular alignment */
+  .fin-num {
+    @apply font-mono tabular-nums;
+  }
+
+  /* Profit/loss coloring utilities with semantic names */
+  .text-up   { @apply text-profit; }
+  .text-down { @apply text-loss; }
+
+  /* Standard table styles */
+  .data-table {
+    @apply w-full text-left text-sm;
+  }
+  .data-table thead {
+    @apply bg-surface-raised;
+  }
+  .data-table thead th {
+    @apply px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-500;
+  }
+  .data-table tbody tr {
+    @apply border-b border-surface-divider transition-colors duration-75 hover:bg-surface-hover;
+  }
+  .data-table tbody td {
+    @apply px-3 py-2.5 text-sm text-zinc-300;
+  }
+  .data-table tbody tr:last-child {
+    @apply border-b-0;
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-zinc-400 transition-colors duration-100 hover:bg-surface-hover hover:text-zinc-100;
+  }
+  .nav-item-active {
+    @apply bg-surface-hover text-zinc-100;
+  }
+}
+
+/* ─── Utility overrides ──────────────────────────────────────────────────── */
+@layer utilities {
+  /* Subtle inner border glow for elevated surfaces */
+  .surface-inset {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* Clip text for long symbol/strategy names */
+  .truncate-name {
+    @apply max-w-[18ch] truncate;
   }
 }

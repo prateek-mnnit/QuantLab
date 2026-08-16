@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { buttonClassName, secondaryButtonClassName } from './Button';
+import { buttonClassName } from './Button';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -7,23 +7,19 @@ interface ConfirmDialogProps {
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  /** Renders the confirm button in the loss/danger color - the delete-confirmation case. */
+  /** Renders the confirm button in the danger/red style — for delete actions. */
   destructive?: boolean;
   isConfirming?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-const DESTRUCTIVE_CONFIRM_CLASSNAME =
-  'inline-flex items-center justify-center rounded-lg bg-loss px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-loss/80 disabled:cursor-not-allowed disabled:opacity-60';
-
 /**
- * A reusable dark-themed replacement for `window.confirm()` on destructive
- * actions - a native browser confirm can't be restyled at all, so it was
- * the one place in the app that broke out of the QuantLab charcoal design.
- * Generic on purpose (title/description/labels are all props) so any
- * future destructive action - not just strategy deletion - can reuse it
- * without a new component.
+ * Dark-themed modal confirm dialog. Replaces browser window.confirm() for
+ * destructive actions.
+ *
+ * Redesign: tighter padding, zinc surface colors, more polished shadow.
+ * Logic (Escape key, focus trap, aria attributes) is preserved unchanged.
  */
 export function ConfirmDialog({
   open,
@@ -38,8 +34,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Closing on Escape mirrors what a native window.confirm()/dialog would
-  // do, so keyboard users lose nothing by this being a custom component.
+  // Close on Escape — mirrors native dialog behavior for keyboard users.
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(event: KeyboardEvent): void {
@@ -49,6 +44,7 @@ export function ConfirmDialog({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, onCancel]);
 
+  // Auto-focus the confirm button when opened.
   useEffect(() => {
     if (open) confirmButtonRef.current?.focus();
   }, [open]);
@@ -57,7 +53,7 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm"
       role="presentation"
       onClick={onCancel}
     >
@@ -66,23 +62,29 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby={description ? 'confirm-dialog-description' : undefined}
-        className="w-full max-w-sm rounded-xl border border-surface-border bg-surface-elevated p-6 shadow-lg"
-        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-sm rounded-lg border border-zinc-800 bg-surface-elevated p-5 shadow-surface"
+        onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="confirm-dialog-title" className="text-lg font-semibold text-slate-50">
+        <h2
+          id="confirm-dialog-title"
+          className="text-base font-semibold text-zinc-100"
+        >
           {title}
         </h2>
         {description && (
-          <p id="confirm-dialog-description" className="mt-2 text-sm text-slate-400">
+          <p
+            id="confirm-dialog-description"
+            className="mt-1.5 text-sm text-zinc-400"
+          >
             {description}
           </p>
         )}
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-5 flex justify-end gap-2.5">
           <button
             type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className={secondaryButtonClassName}
+            className="inline-flex items-center justify-center rounded-md border border-zinc-700 bg-transparent px-3.5 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-600 hover:bg-zinc-800/60 disabled:opacity-50"
           >
             {cancelLabel}
           </button>
@@ -91,7 +93,11 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
             disabled={isConfirming}
-            className={destructive ? DESTRUCTIVE_CONFIRM_CLASSNAME : buttonClassName}
+            className={
+              destructive
+                ? 'inline-flex items-center justify-center rounded-md bg-red-600 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50'
+                : buttonClassName
+            }
           >
             {isConfirming ? 'Please wait...' : confirmLabel}
           </button>

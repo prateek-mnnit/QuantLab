@@ -43,16 +43,16 @@ export function StrategyTemplatePicker({ onSelectTemplate, onSelectBlank }: Stra
   const cardClassName = (isSelected: boolean): string =>
     `rounded-lg border p-4 text-left transition-colors ${
       isSelected
-        ? 'border-brand-500/60 bg-brand-500/5'
-        : 'border-surface-border bg-surface hover:border-slate-600'
+        ? 'border-accent-500/50 bg-accent-500/5'
+        : 'border-zinc-800 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900'
     }`;
 
   return (
     <div className="space-y-3">
       <div>
-        <h2 className="text-sm font-semibold text-slate-200">Start from a template</h2>
-        <p className="mt-1 text-sm text-slate-400">
-          Pick a built-in strategy as a starting point, or start blank - either way, every
+        <h2 className="text-sm font-semibold text-zinc-200">Start from a template</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Pick a built-in strategy as a starting point, or start blank — either way, every
           condition and setting below stays fully editable before you save.
         </p>
       </div>
@@ -63,8 +63,8 @@ export function StrategyTemplatePicker({ onSelectTemplate, onSelectBlank }: Stra
           onClick={handleSelectBlank}
           className={cardClassName(selectedId === 'blank')}
         >
-          <p className="text-sm font-medium text-slate-100">Blank Strategy</p>
-          <p className="mt-1 text-xs text-slate-400">Start from scratch and build your own conditions.</p>
+          <p className="text-sm font-medium text-zinc-100">Blank Strategy</p>
+          <p className="mt-1 text-xs text-zinc-500">Start from scratch and build your own conditions.</p>
         </button>
 
         {STRATEGY_TEMPLATES.map((template) => (
@@ -74,8 +74,8 @@ export function StrategyTemplatePicker({ onSelectTemplate, onSelectBlank }: Stra
             onClick={() => handleSelectTemplate(template)}
             className={cardClassName(selectedId === template.id)}
           >
-            <p className="text-sm font-medium text-slate-100">{template.name}</p>
-            <p className="mt-1 text-xs text-slate-400">{template.description}</p>
+            <p className="text-sm font-medium text-zinc-100">{template.name}</p>
+            <p className="mt-1 text-xs text-zinc-500">{template.description}</p>
           </button>
         ))}
       </div>

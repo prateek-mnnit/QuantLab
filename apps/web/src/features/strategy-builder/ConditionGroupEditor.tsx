@@ -23,7 +23,7 @@ function AddActionButton({ onClick, children }: { onClick: () => void; children:
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-surface-border px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-slate-500 hover:text-slate-100"
+      className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-400 transition-colors hover:border-zinc-500 hover:text-zinc-200"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="h-3.5 w-3.5" aria-hidden="true">
         <path d="M12 5v14M5 12h14" />
@@ -43,11 +43,11 @@ function AddActionButton({ onClick, children }: { onClick: () => void; children:
 function MatchTypeToggle({ value, onChange }: { value: 'AND' | 'OR'; onChange: (value: 'AND' | 'OR') => void }) {
   const optionClass = (isActive: boolean): string =>
     `rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
-      isActive ? 'bg-brand-500/15 text-brand-300' : 'text-slate-500 hover:text-slate-300'
+      isActive ? 'bg-accent-500/15 text-accent-400' : 'text-zinc-500 hover:text-zinc-300'
     }`;
 
   return (
-    <div role="radiogroup" aria-label="Match type" className="inline-flex items-center rounded-md border border-surface-border bg-surface p-0.5">
+    <div role="radiogroup" aria-label="Match type" className="inline-flex items-center rounded-md border border-zinc-700 bg-zinc-900 p-0.5">
       <button type="button" role="radio" aria-checked={value === 'AND'} onClick={() => onChange('AND')} className={optionClass(value === 'AND')}>
         ALL (AND)
       </button>
@@ -87,13 +87,13 @@ export function ConditionGroupEditor({ group, onChange, onRemove, depth = 0 }: C
 
   return (
     <div
-      className={`space-y-3 rounded-lg border border-surface-border p-4 ${
-        depth > 0 ? 'border-l-2 border-l-surface-border bg-surface-raised' : ''
+      className={`space-y-3 rounded-lg border border-zinc-800 p-4 ${
+        depth > 0 ? 'border-l-2 border-l-zinc-700 bg-zinc-900/40' : ''
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Match</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-zinc-600">Match</span>
           <MatchTypeToggle value={group.type} onChange={(type) => onChange({ ...group, type })} />
         </div>
         {onRemove && (
@@ -111,8 +111,8 @@ export function ConditionGroupEditor({ group, onChange, onRemove, depth = 0 }: C
       </div>
 
       {group.children.length === 0 && (
-        <div className="rounded-md border border-dashed border-surface-border px-3 py-3 text-center">
-          <p className="text-sm text-slate-500">No conditions yet - add one below to get started.</p>
+        <div className="rounded-md border border-dashed border-zinc-800 px-3 py-3 text-center">
+          <p className="text-sm text-zinc-500">No conditions yet — add one below to get started.</p>
         </div>
       )}
 
@@ -124,7 +124,7 @@ export function ConditionGroupEditor({ group, onChange, onRemove, depth = 0 }: C
                 `group.type` on every render rather than stored anywhere. */}
             {index > 0 && (
               <div className="flex justify-start py-1 pl-1">
-                <span className="rounded bg-surface px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                <span className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
                   {group.type}
                 </span>
               </div>

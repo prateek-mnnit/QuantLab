@@ -49,47 +49,44 @@ const TradeRow = memo(function TradeRow({ trade }: TradeRowProps) {
 
   return (
     <>
-      <tr className="text-slate-200">
-        <td className="px-4 py-3 text-slate-400">{formatDate(trade.entryTime)}</td>
-        <td className="px-4 py-3 text-slate-400">{formatDate(trade.exitTime)}</td>
-        {/* The engine is long-only today (no short-selling support), so
-            every trade IS a long position - this reflects that real
-            behavior rather than a hardcoded/fake value. */}
-        <td className="px-4 py-3">Long</td>
-        <td className="px-4 py-3">{formatPrice(trade.entryPrice)}</td>
-        <td className="px-4 py-3">{formatPrice(trade.exitPrice)}</td>
-        <td className={`px-4 py-3 font-medium ${pnlIsPositive ? 'text-profit' : 'text-loss'}`}>
+      <tr className="border-b border-zinc-800/50 transition-colors duration-75 last:border-b-0 hover:bg-zinc-800/30">
+        <td className="px-3 py-2.5 text-sm text-zinc-500">{formatDate(trade.entryTime)}</td>
+        <td className="px-3 py-2.5 text-sm text-zinc-500">{formatDate(trade.exitTime)}</td>
+        <td className="px-3 py-2.5 text-sm text-zinc-400">Long</td>
+        <td className="px-3 py-2.5 font-mono text-sm tabular-nums text-zinc-300">{formatPrice(trade.entryPrice)}</td>
+        <td className="px-3 py-2.5 font-mono text-sm tabular-nums text-zinc-300">{formatPrice(trade.exitPrice)}</td>
+        <td className={`px-3 py-2.5 font-mono text-sm font-semibold tabular-nums ${pnlIsPositive ? 'text-profit' : 'text-loss'}`}>
           {trade.pnl === null ? '—' : trade.pnl.toFixed(2)}
         </td>
-        <td className={`px-4 py-3 font-medium ${pnlIsPositive ? 'text-profit' : 'text-loss'}`}>
+        <td className={`px-3 py-2.5 font-mono text-sm font-semibold tabular-nums ${pnlIsPositive ? 'text-profit' : 'text-loss'}`}>
           {returnPct === null ? '—' : `${returnPct.toFixed(2)}%`}
         </td>
-        <td className="px-4 py-3 text-slate-400">
+        <td className="px-3 py-2.5 text-sm text-zinc-500">
           {trade.exitReason ? (EXIT_REASON_LABEL[trade.exitReason] ?? trade.exitReason) : '—'}
         </td>
-        <td className="px-4 py-3 text-right">
+        <td className="px-3 py-2.5 text-right">
           <button
             type="button"
             onClick={() => setIsExpanded((current) => !current)}
-            className="text-xs font-medium text-brand-400 hover:text-brand-300"
+            className="text-xs font-medium text-zinc-500 hover:text-zinc-200 transition-colors"
           >
             {isExpanded ? 'Hide' : 'Why?'}
           </button>
         </td>
       </tr>
       {isExpanded && (
-        <tr className="bg-surface">
+        <tr className="bg-zinc-800/20">
           <td colSpan={9} className="px-4 py-4">
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-600">
                   Entry conditions
                 </p>
                 <TradeExplanation explanation={trade.entryExplanation} />
               </div>
               {trade.exitExplanation && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-600">
                     Exit conditions
                   </p>
                   <TradeExplanation explanation={trade.exitExplanation} />
@@ -102,6 +99,7 @@ const TradeRow = memo(function TradeRow({ trade }: TradeRowProps) {
     </>
   );
 });
+
 
 interface TradeTableProps {
   trades: Trade[];
@@ -119,31 +117,31 @@ interface TradeTableProps {
 export function TradeTable({ trades }: TradeTableProps) {
   if (trades.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-surface-border p-10 text-center">
-        <p className="text-sm text-slate-400">This backtest didn&apos;t produce any trades.</p>
+      <div className="rounded-lg border border-dashed border-zinc-800 p-10 text-center">
+        <p className="text-sm text-zinc-500">This backtest didn&apos;t produce any trades.</p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-surface-border">
+    <div className="overflow-x-auto rounded-lg border border-zinc-800">
       <table className="w-full min-w-[900px] text-left text-sm">
-        <thead className="bg-surface-raised text-xs uppercase tracking-wide text-slate-500">
+        <thead className="border-b border-zinc-800 bg-zinc-900/80">
           <tr>
-            <th className="px-4 py-3 font-medium">Entry Date</th>
-            <th className="px-4 py-3 font-medium">Exit Date</th>
-            <th className="px-4 py-3 font-medium">Direction</th>
-            <th className="px-4 py-3 font-medium">Entry Price</th>
-            <th className="px-4 py-3 font-medium">Exit Price</th>
-            <th className="px-4 py-3 font-medium">P&amp;L</th>
-            <th className="px-4 py-3 font-medium">Return %</th>
-            <th className="px-4 py-3 font-medium">Exit Reason</th>
-            <th className="px-4 py-3 font-medium">
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Entry Date</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Exit Date</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Direction</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Entry Price</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Exit Price</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">P&amp;L</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Return %</th>
+            <th className="px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-zinc-600">Exit Reason</th>
+            <th className="px-3 py-2.5 font-medium">
               <span className="sr-only">Explanation</span>
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-surface-border">
+        <tbody className="divide-y divide-zinc-800/50">
           {trades.map((trade) => (
             <TradeRow key={trade.id} trade={trade} />
           ))}

@@ -23,12 +23,12 @@ interface ConditionLeafEditorProps {
     for attention. */
 export function ConditionLeafEditor({ leaf, onChange, onRemove }: ConditionLeafEditorProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-surface-border bg-surface p-3">
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
       <OperandEditor value={leaf.left} onChange={(left) => onChange({ ...leaf, left })} />
 
       <select
         aria-label="Operator"
-        className="shrink-0 rounded-md border border-surface-border bg-surface-raised px-2.5 py-1.5 text-xs font-medium uppercase tracking-wide text-slate-300 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        className="shrink-0 rounded-md border border-zinc-700 bg-zinc-800 px-2.5 py-1.5 text-xs font-medium uppercase tracking-wider text-zinc-300 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500/30"
         value={leaf.operator}
         onChange={(event) => onChange({ ...leaf, operator: event.target.value as ComparisonOperator })}
       >
@@ -46,7 +46,7 @@ export function ConditionLeafEditor({ leaf, onChange, onRemove }: ConditionLeafE
         onClick={onRemove}
         aria-label="Remove condition"
         title="Remove condition"
-        className="ml-auto inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-loss/10 hover:text-loss"
+        className="ml-auto inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-loss/10 hover:text-loss"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
           <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0-.867 12.142A2 2 0 0 1 15.138 20H8.862a2 2 0 0 1-1.995-1.858L6 6" />

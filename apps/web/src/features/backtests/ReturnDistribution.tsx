@@ -16,7 +16,7 @@ export function ReturnDistribution({ trades }: ReturnDistributionProps) {
   const buckets = useMemo(() => computeReturnHistogram(trades), [trades]);
 
   if (buckets.length === 0) {
-    return <p className="text-sm text-slate-500">Not enough data to show a return distribution.</p>;
+    return <p className="text-sm text-zinc-500">Not enough data to show a return distribution.</p>;
   }
 
   const maxCount = Math.max(...buckets.map((bucket) => bucket.count), 1);
@@ -29,7 +29,7 @@ export function ReturnDistribution({ trades }: ReturnDistributionProps) {
             className={`w-full rounded-t transition-colors ${bucket.isPositive ? 'bg-profit/70' : 'bg-loss/70'}`}
             style={{ height: `${(bucket.count / maxCount) * 100}%`, minHeight: bucket.count > 0 ? '2px' : '0' }}
           />
-          <div className="pointer-events-none absolute bottom-full mb-1 hidden whitespace-nowrap rounded bg-surface-raised px-2 py-1 text-xs text-slate-200 shadow-lg group-hover:block">
+          <div className="pointer-events-none absolute bottom-full mb-1 hidden whitespace-nowrap rounded bg-zinc-800 px-2 py-1 text-xs text-zinc-200 shadow-lg group-hover:block">
             {bucket.rangeLabel}: {bucket.count} trade{bucket.count === 1 ? '' : 's'}
           </div>
         </div>

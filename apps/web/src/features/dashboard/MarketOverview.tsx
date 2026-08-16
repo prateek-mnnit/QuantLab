@@ -3,58 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { useCandles } from '../market-data/useMarketData';
 import { useChartViewStore } from '../../store/chartViewStore';
 import { computeIndexChange } from './marketOverviewMath';
-
 /**
- * Yahoo Finance's own tickers for these four Indian indices (the `^`
- * prefix is Yahoo's convention for an index, not a stock) - confirmed by
- * reading `YahooFinanceProvider`: it passes `symbol` straight into the
- * chart URL with no assumption that a symbol is a tradeable equity, so any
- * symbol Yahoo itself recognizes works unmodified through the EXACT same
- * `GET /api/market-data/candles` endpoint and `useCandles` hook ChartPage
- * already uses - no second market-data provider, no new endpoint.
+ * Yahoo Finance tickers for the four Indian market indices.
+ * The `^` prefix is Yahoo's convention for an index, not a stock.
  */
 const INDICES: { symbol: string; label: string }[] = [
-  { symbol: '^NSEI', label: 'NIFTY 50' },
-  { symbol: '^BSESN', label: 'SENSEX' },
+  { symbol: '^NSEI',    label: 'NIFTY 50'   },
+  { symbol: '^BSESN',   label: 'SENSEX'     },
   { symbol: '^NSEBANK', label: 'NIFTY BANK' },
-  { symbol: '^CNXIT', label: 'NIFTY IT' },
+  { symbol: '^CNXIT',   label: 'NIFTY IT'   },
 ];
 
-/** Wide enough to comfortably span at least two trading days even around a long weekend/holiday - only the last two matter (see computeIndexChange), the rest is just safety margin. */
 const LOOKBACK_DAYS = 10;
-
 const numberFormatter = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
 
 /**
- * A compact strip of index cards, in the spirit of (not copied from) the
- * market strips common to Indian trading apps - four small cards, each
- * independently loading/failing so one bad symbol never blanks out the
- * other three or the rest of the Dashboard.
+ * Compact 4-card market overview strip.
+ * Each card is independently loading/failing — one bad symbol never
+ * blanks the others or the rest of the Dashboard.
  *
- * Each card is clickable, reusing the EXACT same mechanism
- * `DashboardPage`'s own Watchlist preview uses to open the Chart page for
- * a symbol: `chartViewStore`'s `selectSymbol` action, then `navigate`d to
- * the existing `/chart` route - not a second navigation/state system.
+ * BUG FIX preserved: `from`/`to` computed in useMemo with [] deps to
+ * produce stable query keys across re-renders (prevents fetch storms).
  */
 export function MarketOverview() {
   const navigate = useNavigate();
   const selectChartSymbol = useChartViewStore((state) => state.selectSymbol);
 
-  // BUG FIX (post-Group-AJ): `to`/`from` used to be computed as `new
-  // Date()` directly in the component body, which meant a NEW Date
-  // instance - a different millisecond timestamp - on every render.
-  // `useCandles`'s queryKey includes `from.toISOString()`/`to.toISOString()`
-  // (see useMarketData.ts), so every render was producing four brand-new,
-  // never-before-seen query keys instead of stable ones. React Query had
-  // no way to recognize these as "the same query" across renders: each
-  // one was a first-time fetch, which changes loading/success state, which
-  // re-renders this component, which created four more new Date()s ->
-  // an unbounded, self-sustaining fetch storm. Wrapping this in
-  // `useMemo` with an empty dependency array computes `from`/`to` exactly
-  // ONCE for the lifetime of this mounted component, so the four
-  // `useCandles` calls below get stable query keys across re-renders -
-  // the four index queries now fetch once (per normal React Query
-  // caching/staleTime rules) instead of continuously.
+  // Stable dates — computed once per mount, not on every render.
   const { from, to } = useMemo(() => {
     const to = new Date();
     const from = new Date();
@@ -62,43 +37,32 @@ export function MarketOverview() {
     return { from, to };
   }, []);
 
-  // Four explicit calls (not a loop) - the array above is fixed at module
-  // scope, so this never violates the rules of hooks, and it's the same
-  // `useCandles` hook ChartPage already calls, just four times instead of
-  // once.
-  const nifty50 = useCandles(INDICES[0]!.symbol, '1D', from, to);
-  const sensex = useCandles(INDICES[1]!.symbol, '1D', from, to);
+  // Four explicit calls — array is module-scoped so this never violates rules of hooks.
+  const nifty50   = useCandles(INDICES[0]!.symbol, '1D', from, to);
+  const sensex    = useCandles(INDICES[1]!.symbol, '1D', from, to);
   const niftyBank = useCandles(INDICES[2]!.symbol, '1D', from, to);
-  const niftyIt = useCandles(INDICES[3]!.symbol, '1D', from, to);
+  const niftyIt   = useCandles(INDICES[3]!.symbol, '1D', from, to);
 
   const queries = [nifty50, sensex, niftyBank, niftyIt];
 
   function openChart(index: { symbol: string; label: string }): void {
-    // Same store action + route DashboardPage's Watchlist preview already
-    // uses (see `goToChart` in DashboardPage.tsx) - `name` is the index's
-    // display label (e.g. "NIFTY 50") rather than the bare symbol, since
-    // that's more readable than "^NSEI" and, unlike a WatchlistItem, an
-    // index label is already known here.
     selectChartSymbol({ symbol: index.symbol, name: index.label, exchange: '' });
     navigate('/chart');
   }
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-slate-200">Market Overview</h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {INDICES.map((index, i) => (
-          <IndexCard
-            key={index.symbol}
-            label={index.label}
-            isLoading={queries[i]!.isLoading}
-            isError={queries[i]!.isError}
-            candles={queries[i]!.data}
-            onClick={() => openChart(index)}
-          />
-        ))}
-      </div>
-    </section>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {INDICES.map((index, i) => (
+        <IndexCard
+          key={index.symbol}
+          label={index.label}
+          isLoading={queries[i]!.isLoading}
+          isError={queries[i]!.isError}
+          candles={queries[i]!.data}
+          onClick={() => openChart(index)}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -116,34 +80,112 @@ function IndexCard({
   onClick: () => void;
 }) {
   const change = candles ? computeIndexChange(candles) : null;
+  const isPositive = change ? change.changePct >= 0 : null;
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`Open ${label} chart`}
-      className="w-full rounded-xl border border-surface-border bg-surface-raised p-4 text-left transition-colors hover:border-brand-500/40 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50"
+      className="group w-full rounded-lg border border-zinc-800 bg-zinc-900/60 p-3 text-left transition-colors duration-150 hover:border-zinc-700 hover:bg-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-600"
     >
-      <p className="text-xs font-medium text-slate-400">{label}</p>
+      {/* Label row */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-zinc-500">{label}</p>
+        {!isLoading && change !== null && isPositive !== null && (
+          <span
+            className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+              isPositive ? 'bg-profit' : 'bg-loss'
+            }`}
+            aria-hidden="true"
+          />
+        )}
+      </div>
 
+      {/* Loading skeleton */}
       {isLoading && (
         <div className="mt-2 space-y-1.5">
-          <div className="h-5 w-16 animate-pulse rounded bg-surface" />
-          <div className="h-3 w-10 animate-pulse rounded bg-surface" />
+          <div className="h-5 w-20 animate-pulse rounded bg-zinc-800" />
+          <div className="h-3 w-12 animate-pulse rounded bg-zinc-800" />
         </div>
       )}
 
-      {!isLoading && (isError || !change) && <p className="mt-2 text-sm text-slate-500">Unavailable</p>}
+      {/* Error / unavailable */}
+      {!isLoading && (isError || !change) && (
+        <p className="mt-2 text-xs text-zinc-600">Unavailable</p>
+      )}
 
+      {/* Data & Sparkline */}
       {!isLoading && !isError && change && (
-        <>
-          <p className="mt-1 text-lg font-semibold text-slate-50">{numberFormatter.format(change.latestClose)}</p>
-          <p className={`text-xs font-medium ${change.changePct >= 0 ? 'text-profit' : 'text-loss'}`}>
-            {change.changePct >= 0 ? '+' : ''}
-            {change.changePct.toFixed(2)}%
-          </p>
-        </>
+        <div className="mt-1.5 flex flex-col">
+          <div className="flex items-baseline justify-between">
+            <div>
+              <p className="text-lg font-semibold tabular-nums text-zinc-100">
+                {numberFormatter.format(change.latestClose)}
+              </p>
+              <p
+                className={`text-xs font-medium tabular-nums ${
+                  isPositive ? 'text-profit' : 'text-loss'
+                }`}
+              >
+                {isPositive ? '+' : ''}{change.changePct.toFixed(2)}%
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-3">
+            <Sparkline 
+              data={candles ? candles.map(c => c.close) : []} 
+              isPositive={isPositive!} 
+            />
+          </div>
+        </div>
       )}
     </button>
+  );
+}
+
+function Sparkline({ data, isPositive }: { data: number[]; isPositive: boolean }) {
+  if (data.length < 2) return null;
+  
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  
+  // SVG relative dimensions
+  const width = 100;
+  const height = 24;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  // subtle gradient fill
+  const color = isPositive ? '#22c55e' : '#ef4444';
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-6 w-full overflow-visible" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={`gradient-${isPositive}`} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polyline
+        points={`${width},${height} 0,${height} ${points}`}
+        fill={`url(#gradient-${isPositive})`}
+        stroke="none"
+      />
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

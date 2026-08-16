@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { TIMEFRAME_LABELS } from '@quantlab/shared-types';
 import { useBacktest, useBacktestTrades } from '../features/backtests/useBacktests';
 import { TradeTable } from '../features/backtests/TradeTable';
@@ -9,159 +9,184 @@ import { MonthlyPerformanceTable } from '../features/backtests/MonthlyPerformanc
 import { ReturnDistribution } from '../features/backtests/ReturnDistribution';
 import { ExitReasonBreakdown } from '../features/backtests/ExitReasonBreakdown';
 
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: 'Pending',
-  RUNNING: 'Running',
-  COMPLETED: 'Completed',
-  FAILED: 'Failed',
+// ─── Status badge ─────────────────────────────────────────────────────────────
+const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  COMPLETED: { label: 'Completed', cls: 'bg-profit/10 text-profit border-profit/20'    },
+  FAILED:    { label: 'Failed',    cls: 'bg-loss/10 text-loss border-loss/20'          },
+  RUNNING:   { label: 'Running',   cls: 'bg-warning/10 text-warning border-warning/20' },
+  PENDING:   { label: 'Pending',   cls: 'bg-zinc-700/30 text-zinc-400 border-zinc-700' },
 };
+
+function StatusBadge({ status }: { status: string }) {
+  const { label, cls } = STATUS_CONFIG[status] ?? { label: status, cls: 'bg-zinc-800 text-zinc-400 border-zinc-700' };
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+// ─── Key metric tile ──────────────────────────────────────────────────────────
+function Metric({ label, value, tone }: {
+  label: string;
+  value: string;
+  tone?: 'profit' | 'loss' | 'risk';
+}) {
+  const toneClass =
+    tone === 'profit' ? 'text-profit' :
+    (tone === 'loss' || tone === 'risk') ? 'text-loss' :
+    'text-zinc-100';
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs font-medium uppercase tracking-wider text-zinc-600">{label}</dt>
+      <dd className={`mt-1.5 text-xl font-semibold tabular-nums ${toneClass}`}>{value}</dd>
+    </div>
+  );
+}
+
+// ─── Chart panel wrapper ──────────────────────────────────────────────────────
+function ChartPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">{title}</p>
+      {children}
+    </div>
+  );
+}
 
 function formatPct(value: number | null): string {
   return value === null ? '—' : `${value.toFixed(2)}%`;
 }
 
-function Metric({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string;
-  /** 'profit'/'loss' color the value green/red; 'risk' is the same red used
-      for loss, kept as a separate name so call sites read as intent
-      (Max Drawdown isn't literally a loss figure, but should still visually
-      communicate risk) rather than a coincidental color match. */
-  tone?: 'profit' | 'loss' | 'risk';
-}) {
-  const toneClass =
-    tone === 'profit' ? 'text-profit' : tone === 'loss' || tone === 'risk' ? 'text-loss' : 'text-slate-100';
-  return (
-    <div>
-      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className={`mt-1 text-lg font-semibold ${toneClass}`}>{value}</dd>
-    </div>
-  );
-}
-
-/**
- * Where "Run Backtest" lands: run status/summary metrics (Group P), an
- * analytics section - equity curve, drawdown, performance cards (now
- * including max win/loss streaks), monthly table, return distribution, and
- * exit reason breakdown (Group AE adds the streak cards and the exit
- * reason chart; everything else in Analytics predates it) - and the full
- * trade log with expandable entry/exit explanations (Group Q). Strategy
- * comparison is still excluded, on purpose.
- */
+// ─── BacktestDetailPage ───────────────────────────────────────────────────────
 export function BacktestDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: run, isLoading, isError } = useBacktest(id);
-  // Only fetch trades once the run has actually finished - a PENDING/
-  // RUNNING run has none yet, and a FAILED run never produced any.
   const shouldFetchTrades = run?.status === 'COMPLETED';
-  const {
-    data: trades,
-    isLoading: isLoadingTrades,
-    isError: isTradesError,
-  } = useBacktestTrades(shouldFetchTrades ? id : undefined);
+  const { data: trades, isLoading: isLoadingTrades, isError: isTradesError } =
+    useBacktestTrades(shouldFetchTrades ? id : undefined);
 
   if (isLoading) {
-    return <p className="text-sm text-slate-400">Loading backtest...</p>;
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-8 w-48 rounded bg-zinc-800" />
+        <div className="h-4 w-64 rounded bg-zinc-800" />
+        <div className="h-32 rounded-lg bg-zinc-800" />
+      </div>
+    );
   }
 
   if (isError || !run) {
-    return <p className="text-sm text-loss">Couldn&apos;t load this backtest.</p>;
+    return (
+      <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        Couldn&apos;t load this backtest.
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-50">{run.symbol} backtest</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe} ·{' '}
-          {new Date(run.dateFrom).toLocaleDateString()} - {new Date(run.dateTo).toLocaleDateString()}
-        </p>
+    <div className="space-y-6">
+      {/* ── Hero header ──────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-zinc-100">{run.symbol}</h1>
+            <StatusBadge status={run.status} />
+          </div>
+          <p className="mt-1 text-sm text-zinc-500">
+            {TIMEFRAME_LABELS[run.timeframe] ?? run.timeframe}
+            {' · '}
+            {new Date(run.dateFrom).toLocaleDateString()} — {new Date(run.dateTo).toLocaleDateString()}
+          </p>
+        </div>
+        <Link
+          to="/backtests"
+          className="text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+        >
+          ← All Backtests
+        </Link>
       </div>
 
-      <div className="rounded-xl border border-surface-border bg-surface-raised p-6">
-        <p className="text-sm font-medium text-slate-300">
-          Status: <span className="text-slate-100">{STATUS_LABEL[run.status] ?? run.status}</span>
-        </p>
-
-        {run.status === 'FAILED' && run.errorMessage && (
-          <p className="mt-2 text-sm text-loss">{run.errorMessage}</p>
-        )}
-
-        {(run.status === 'PENDING' || run.status === 'RUNNING') && (
-          <p className="mt-2 text-sm text-slate-400">This backtest hasn&apos;t finished yet.</p>
-        )}
-
-        {run.status === 'COMPLETED' && (
-          <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      {/* ── Key metrics ──────────────────────────────────────────────────── */}
+      {run.status === 'COMPLETED' && (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-5">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6">
             <Metric
-              label="Total return"
+              label="Total Return"
               value={formatPct(run.totalReturnPct)}
               tone={run.totalReturnPct === null ? undefined : run.totalReturnPct >= 0 ? 'profit' : 'loss'}
             />
-            <Metric label="Win rate" value={formatPct(run.winRate)} />
-            <Metric label="Profit factor" value={run.profitFactor?.toFixed(2) ?? '—'} />
-            <Metric label="Max drawdown" value={formatPct(run.maxDrawdownPct)} tone="risk" />
-            <Metric label="Sharpe ratio" value={run.sharpeRatio?.toFixed(2) ?? '—'} />
-            <Metric label="Total trades" value={run.totalTrades?.toString() ?? '—'} />
+            <Metric label="Win Rate"      value={formatPct(run.winRate)} />
+            <Metric label="Profit Factor" value={run.profitFactor?.toFixed(2) ?? '—'} />
+            <Metric label="Max Drawdown"  value={formatPct(run.maxDrawdownPct)} tone="risk" />
+            <Metric label="Sharpe Ratio"  value={run.sharpeRatio?.toFixed(2) ?? '—'} />
+            <Metric label="Total Trades"  value={run.totalTrades?.toString() ?? '—'} />
           </dl>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Non-completed states */}
+      {run.status === 'FAILED' && (
+        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
+          <p className="text-sm font-medium text-red-400">Backtest failed</p>
+          {run.errorMessage && (
+            <p className="mt-1 text-sm text-red-400/70">{run.errorMessage}</p>
+          )}
+        </div>
+      )}
+      {(run.status === 'PENDING' || run.status === 'RUNNING') && (
+        <div className="rounded-lg border border-warning/20 bg-warning/10 px-4 py-3 text-sm text-warning">
+          This backtest hasn&apos;t finished yet. Refresh to check for updates.
+        </div>
+      )}
+
+      {/* ── Analytics ───────────────────────────────────────────────────── */}
       {run.status === 'COMPLETED' && trades && (
-        <div className="space-y-6">
-          <h2 className="text-sm font-semibold text-slate-200">Analytics</h2>
+        <div className="space-y-5">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Analytics</h2>
 
+          {/* Performance metric cards */}
           <PerformanceCards run={run} trades={trades} />
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Equity Curve
-              </p>
+          {/* Charts 2×2 grid */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ChartPanel title="Equity Curve">
               <EquityCurve trades={trades} />
-            </div>
-            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Drawdown
-              </p>
+            </ChartPanel>
+            <ChartPanel title="Drawdown">
               <DrawdownChart trades={trades} />
-            </div>
+            </ChartPanel>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Return Distribution
-              </p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <ChartPanel title="Return Distribution">
               <ReturnDistribution trades={trades} />
-            </div>
-
-            <div className="rounded-xl border border-surface-border bg-surface-raised p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Exit Reason Breakdown
-              </p>
+            </ChartPanel>
+            <ChartPanel title="Exit Reason Breakdown">
               <ExitReasonBreakdown trades={trades} />
-            </div>
+            </ChartPanel>
           </div>
 
+          {/* Monthly performance */}
           <MonthlyPerformanceTable trades={trades} />
         </div>
       )}
 
+      {/* ── Trade log ────────────────────────────────────────────────────── */}
       {run.status === 'COMPLETED' && (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-200">Trades</h2>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Trade Log</h2>
 
-          {isLoadingTrades && <p className="text-sm text-slate-400">Loading trades...</p>}
-
-          {isTradesError && (
-            <p className="text-sm text-loss">Couldn&apos;t load the trade log for this backtest.</p>
+          {isLoadingTrades && (
+            <div className="space-y-2 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-10 rounded-lg bg-zinc-800/50" />
+              ))}
+            </div>
           )}
-
+          {isTradesError && (
+            <p className="text-sm text-red-400">Couldn&apos;t load the trade log.</p>
+          )}
           {trades && <TradeTable trades={trades} />}
         </div>
       )}
