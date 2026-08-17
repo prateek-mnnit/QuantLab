@@ -7,3 +7,4 @@ packages/*/dist
 .git
 .github
 .env
+.env.production
